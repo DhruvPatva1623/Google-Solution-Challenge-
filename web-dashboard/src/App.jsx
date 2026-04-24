@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback, memo } from 'react'
 import { AlertCircle, Mic, Heart, Compass, Award, User, Share2, MapPin, CheckCircle, ShieldCheck, Activity, Star, X, Bell, LogOut, Edit3, Lock, Phone, Mail, Camera, TrendingUp, Users, Clock, Trophy, ChevronRight, ChevronDown, Download, Calendar, Target, Zap, Globe, BookOpen, Badge } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -699,19 +699,21 @@ function VolunteerDashboard({ user, addToast, onLogout, onOpenProfile }) {
     { id:5, title: 'Clean Water Distribution', dist: '7.2 km', score: 80, type: 'URGENT', color: '#f97316', skills: ['Logistics'], deadline:'Tomorrow 12:00 PM', volunteers:6, needed:15 },
   ];
 
-  const myTaskHistory = [
+  const myTaskHistory = useMemo(() => [
     {title:'Blood Donation Camp',date:'2026-04-10',hrs:4,status:'Completed',pts:200},
     {title:'Tree Plantation Drive',date:'2026-03-22',hrs:6,status:'Completed',pts:300},
     {title:'Scholarship Form Fill-Up',date:'2026-03-05',hrs:3,status:'Completed',pts:150},
     {title:'Winter Blanket Distribution',date:'2026-02-14',hrs:8,status:'Completed',pts:400},
-  ];
+    {title:'Road Accident First Aid',date:'2026-01-30',hrs:2,status:'Completed',pts:100},
+  ], []);
 
-  const govtSchemes = [
+  const govtSchemes = useMemo(() => [
     { name: 'PM-KISAN', benefit: '₹6,000/year', eligible: true, desc: 'Direct income support for farming families' },
     { name: 'Ayushman Bharat', benefit: '₹5 Lakh/year', eligible: true, desc: 'Health insurance for below-poverty families' },
     { name: 'MGNREGA', benefit: '100 days work', eligible: true, desc: 'Guaranteed rural employment scheme' },
     { name: 'PM Awas Yojana', benefit: 'Housing subsidy', eligible: false, desc: 'Affordable housing for urban poor' },
-  ];
+    { name: 'PM Scholarship', benefit: 'Up to ₹25,000/yr', eligible: true, desc: 'Merit-based scholarship for students' },
+  ], []);
 
   const unread = notifications.filter(n=>!n.read).length;
 
@@ -727,27 +729,38 @@ function VolunteerDashboard({ user, addToast, onLogout, onOpenProfile }) {
     addToast(checkinActive ? '📍 Checked out — great work today!' : '📍 Checked in! Your hours are being tracked','success');
   };
 
-  const impactBar = {
-    labels:['Jan','Feb','Mar','Apr'],
-    datasets:[{
-      label:'Hours',data:[18,26,12,32],backgroundColor:'rgba(249,115,22,0.4)',
-      borderColor:'var(--primary-500)',borderWidth:2,borderRadius:8
+  const impactBar = useMemo(() => ({
+    labels: ['Jan','Feb','Mar','Apr','May','Jun'],
+    datasets: [{
+      label: 'Hours',
+      data: [18, 26, 12, 32, 28, 40],
+      backgroundColor: 'rgba(249,115,22,0.55)',
+      borderColor: '#f97316',
+      borderWidth: 2,
+      borderRadius: 6,
     }]
-  };
+  }), []);
 
-  const donut = {
-    labels:['Medical','Education','Disaster','Food','Environment'],
-    datasets:[{data:[30,25,20,15,10],backgroundColor:['#ef4444','#3b82f6','#f97316','#10b981','#8b5cf6'],borderWidth:0}]
-  };
+  const donut = useMemo(() => ({
+    labels: ['Medical','Education','Disaster','Food','Environment'],
+    datasets: [{ data:[30,25,20,15,10], backgroundColor:['#ef4444','#3b82f6','#f97316','#10b981','#8b5cf6'], borderWidth:0 }]
+  }), []);
 
-  const tabStyle = (t) => ({
-    padding:'0.65rem 1.2rem',borderRadius:'10px',border:'none',cursor:'pointer',fontWeight:600,fontSize:'0.9rem',
-    background: activeTab===t ? 'var(--primary-500)' : 'transparent',
-    color: activeTab===t ? 'white' : 'var(--text-secondary)',
-    transition:'all 0.2s', fontFamily:'var(--font-body)'
-  });
+  const tabStyle = useCallback((t) => ({
+    padding:'0.6rem 1.1rem', borderRadius:'10px', border:'none', cursor:'pointer', fontWeight:600, fontSize:'0.88rem',
+    background: activeTab===t ? '#f97316' : 'transparent',
+    color: activeTab===t ? 'white' : '#9ca3af',
+    transition:'all 0.15s', fontFamily:'var(--font-body)',
+    whiteSpace: 'nowrap',
+  }), [activeTab]);
 
-  const cardS = {background:'var(--glass-bg)',backdropFilter:'blur(20px)',border:'1px solid var(--border-light)',borderRadius:'20px',padding:'1.5rem'};
+  // Lightweight card style — no heavy backdropFilter for perf
+  const cardS = useMemo(() => ({
+    background:'#111827',
+    border:'1px solid rgba(255,255,255,0.08)',
+    borderRadius:'16px',
+    padding:'1.25rem',
+  }), []);
 
   return (
     <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
@@ -845,15 +858,19 @@ function VolunteerDashboard({ user, addToast, onLogout, onOpenProfile }) {
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'2rem',marginBottom:'2rem'}}>
               <div style={cardS}>
                 <h3 style={{fontSize:'1.2rem',marginBottom:'1rem'}}>📊 Activity Overview</h3>
-                <Bar data={impactBar} options={{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'var(--border-light)'}},x:{grid:{display:false}}}}} style={{height:180}}/>
+                <div style={{position:'relative',height:180}}>
+                  <Bar data={impactBar} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{color:'#aaa'},grid:{color:'rgba(255,255,255,0.06)'}},x:{ticks:{color:'#aaa'},grid:{display:false}}}}}/>
+                </div>
               </div>
               <div style={cardS}>
                 <h3 style={{fontSize:'1.2rem',marginBottom:'1rem'}}>🎯 Impact by Category</h3>
-                <div style={{display:'flex',alignItems:'center',gap:'1rem'}}>
-                  <Doughnut data={donut} options={{maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'65%'}} style={{height:160,width:160}}/>
+                <div style={{display:'flex',alignItems:'center',gap:'1.5rem'}}>
+                  <div style={{position:'relative',height:160,width:160,flexShrink:0}}>
+                    <Doughnut data={donut} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'65%'}}/>
+                  </div>
                   <div style={{flex:1}}>
-                    {donut.labels.map((l,i)=>(
-                      <div key={i} style={{display:'flex',alignItems:'center',gap:'0.5rem',marginBottom:'0.4rem',fontSize:'0.82rem'}}>
+                    {donut.labels.map((l,i) => (
+                      <div key={i} style={{display:'flex',alignItems:'center',gap:'0.5rem',marginBottom:'0.5rem',fontSize:'0.82rem'}}>
                         <div style={{width:10,height:10,borderRadius:'50%',background:donut.datasets[0].backgroundColor[i],flexShrink:0}}/>
                         <span>{l}</span>
                         <span style={{marginLeft:'auto',fontWeight:600}}>{donut.datasets[0].data[i]}%</span>
@@ -894,52 +911,96 @@ function VolunteerDashboard({ user, addToast, onLogout, onOpenProfile }) {
         {/* ── MISSIONS TAB ── */}
         {activeTab === 'missions' && (
           <div>
-            <h2 style={{fontSize:'2rem',marginBottom:'0.5rem'}}>🎯 Active Missions Near You</h2>
-            <p style={{color:'var(--text-secondary)',marginBottom:'2rem'}}>AI-matched based on your skills ({(user.skills||['All Skills']).join(', ')}) and location ({user.city||'Your City'}).</p>
-            
-            <div style={{display:'flex',flexDirection:'column',gap:'1.5rem'}}>
-              {tasks.map(task=>(
-                <motion.div key={task.id} whileHover={{y:-3}} style={{...cardS,display:'flex',gap:'1.5rem',flexWrap:'wrap'}}>
-                  <div style={{flex:'1 1 300px'}}>
-                    <div style={{display:'flex',gap:'0.5rem',alignItems:'center',marginBottom:'0.8rem',flexWrap:'wrap'}}>
-                      <span style={{background:`${task.color}22`,color:task.color,padding:'0.25rem 0.8rem',borderRadius:'99px',fontSize:'0.78rem',fontWeight:700}}>{task.type}</span>
-                      <span style={{background:'rgba(139,92,246,0.1)',color:'var(--accent-highlight)',padding:'0.25rem 0.8rem',borderRadius:'99px',fontSize:'0.78rem',fontWeight:700}}>{task.score}% AI Match</span>
-                    </div>
-                    <h3 style={{fontSize:'1.3rem',marginBottom:'0.5rem'}}>{task.title}</h3>
-                    <div style={{display:'flex',gap:'1rem',color:'var(--text-secondary)',fontSize:'0.85rem',flexWrap:'wrap',marginBottom:'0.8rem'}}>
-                      <span><MapPin size={13} style={{display:'inline',verticalAlign:'middle'}}/> {task.dist}</span>
-                      <span><Clock size={13} style={{display:'inline',verticalAlign:'middle'}}/> {task.deadline}</span>
-                      <span><Users size={13} style={{display:'inline',verticalAlign:'middle'}}/> {task.volunteers}/{task.needed} volunteers</span>
-                    </div>
-                    <div style={{display:'flex',gap:'0.4rem',flexWrap:'wrap'}}>
-                      {task.skills.map((s,i)=><span key={i} style={{background:'var(--bg-secondary)',border:'1px solid var(--border-light)',padding:'0.2rem 0.7rem',borderRadius:'99px',fontSize:'0.78rem',fontWeight:500}}>{s}</span>)}
-                    </div>
-                    {/* Volunteer fill bar */}
-                    <div style={{marginTop:'1rem'}}>
-                      <div style={{display:'flex',justifyContent:'space-between',fontSize:'0.78rem',color:'var(--text-secondary)',marginBottom:'0.3rem'}}>
-                        <span>Volunteers</span><span>{task.volunteers}/{task.needed}</span>
+            <h2 style={{fontSize:'1.8rem',marginBottom:'0.4rem'}}>🎯 Active Missions Near You</h2>
+            <p style={{color:'#9ca3af',marginBottom:'1.5rem',fontSize:'0.9rem'}}>AI-matched to your skills ({(user.skills||['All Skills']).slice(0,3).join(', ')}) · {user.city||'Your City'}.</p>
+
+            <div style={{display:'flex',flexDirection:'column',gap:'1.2rem'}}>
+              {tasks.map(task => {
+                const accepted = !!acceptedTasks[task.id];
+                return (
+                  <div key={task.id} style={{...cardS, border: accepted ? '1.5px solid #10b981' : '1px solid rgba(255,255,255,0.08)', transition:'border 0.2s'}}>
+                    <div style={{display:'flex',gap:'1.2rem',flexWrap:'wrap'}}>
+                      <div style={{flex:'1 1 280px'}}>
+                        <div style={{display:'flex',gap:'0.5rem',alignItems:'center',marginBottom:'0.7rem',flexWrap:'wrap'}}>
+                          <span style={{background:`${task.color}22`,color:task.color,padding:'0.2rem 0.7rem',borderRadius:'99px',fontSize:'0.75rem',fontWeight:700}}>{task.type}</span>
+                          <span style={{background:'rgba(139,92,246,0.15)',color:'#a78bfa',padding:'0.2rem 0.7rem',borderRadius:'99px',fontSize:'0.75rem',fontWeight:700}}>{task.score}% AI Match</span>
+                          {accepted && <span style={{background:'rgba(16,185,129,0.15)',color:'#10b981',padding:'0.2rem 0.7rem',borderRadius:'99px',fontSize:'0.75rem',fontWeight:700}}>✓ YOU'RE IN</span>}
+                        </div>
+                        <h3 style={{fontSize:'1.1rem',marginBottom:'0.5rem',fontWeight:700}}>{task.title}</h3>
+                        <div style={{display:'flex',gap:'0.8rem',color:'#9ca3af',fontSize:'0.82rem',flexWrap:'wrap',marginBottom:'0.7rem'}}>
+                          <span>📍 {task.dist}</span>
+                          <span>⏰ {task.deadline}</span>
+                          <span>👥 {task.volunteers}/{task.needed} volunteers</span>
+                        </div>
+                        <div style={{display:'flex',gap:'0.4rem',flexWrap:'wrap',marginBottom:'0.8rem'}}>
+                          {task.skills.map((s,i) => <span key={i} style={{background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.1)',padding:'0.15rem 0.6rem',borderRadius:'99px',fontSize:'0.75rem'}}>{s}</span>)}
+                        </div>
+                        {/* Progress bar */}
+                        <div>
+                          <div style={{display:'flex',justifyContent:'space-between',fontSize:'0.75rem',color:'#9ca3af',marginBottom:'0.25rem'}}>
+                            <span>Volunteers joined</span><span>{Math.round((task.volunteers/task.needed)*100)}%</span>
+                          </div>
+                          <div style={{height:5,background:'rgba(255,255,255,0.08)',borderRadius:'99px',overflow:'hidden'}}>
+                            <div style={{height:'100%',width:`${Math.min((task.volunteers/task.needed)*100,100)}%`,background:`linear-gradient(90deg,${task.color},${task.color}99)`,borderRadius:'99px',transition:'width 1s ease'}}/>
+                          </div>
+                        </div>
                       </div>
-                      <div style={{height:5,background:'var(--border-light)',borderRadius:'99px',overflow:'hidden'}}>
-                        <div style={{height:'100%',width:`${(task.volunteers/task.needed)*100}%`,background:`linear-gradient(90deg,${task.color},${task.color}88)`,borderRadius:'99px'}}/>
+
+                      {/* Action buttons */}
+                      <div style={{display:'flex',flexDirection:'column',gap:'0.6rem',justifyContent:'center',minWidth:150}}>
+                        <button
+                          onClick={() => {
+                            if (!accepted) {
+                              handleAccept(task);
+                              setSelectedTask(task);
+                            }
+                          }}
+                          disabled={accepted}
+                          style={{padding:'0.75rem 1.2rem',borderRadius:'10px',border:'none',
+                            background: accepted ? '#10b981' : '#f97316',
+                            color:'white',fontWeight:700,cursor:accepted?'default':'pointer',
+                            display:'flex',alignItems:'center',justifyContent:'center',gap:'0.5rem',
+                            fontFamily:'var(--font-body)',fontSize:'0.9rem',transition:'all 0.15s'}}>
+                          {accepted ? <><CheckCircle size={15}/> Accepted</> : <><Zap size={15}/> Accept Mission</>}
+                        </button>
+                        <button
+                          onClick={() => addToast(`🧭 AR Navigation launching for "${task.title}"`,'info')}
+                          style={{padding:'0.7rem',borderRadius:'10px',border:'1px solid rgba(255,255,255,0.1)',background:'transparent',color:'white',cursor:'pointer',fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:'0.5rem',fontFamily:'var(--font-body)',fontSize:'0.88rem'}}>
+                          <Compass size={15}/> AR Navigate
+                        </button>
+                        <button
+                          onClick={() => addToast(`📤 Sharing mission link...`,'info')}
+                          style={{padding:'0.7rem',borderRadius:'10px',border:'1px solid rgba(255,255,255,0.1)',background:'transparent',color:'white',cursor:'pointer',fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:'0.5rem',fontFamily:'var(--font-body)',fontSize:'0.88rem'}}>
+                          <Share2 size={15}/> Share
+                        </button>
                       </div>
                     </div>
+
+                    {/* Accepted — show active info panel */}
+                    {accepted && (
+                      <div style={{marginTop:'1rem',padding:'0.9rem',background:'rgba(16,185,129,0.08)',border:'1px solid rgba(16,185,129,0.25)',borderRadius:'12px'}}>
+                        <div style={{fontWeight:700,color:'#10b981',marginBottom:'0.5rem',fontSize:'0.9rem'}}>✅ Mission Active — You are registered!</div>
+                        <div style={{display:'flex',gap:'1.5rem',flexWrap:'wrap',fontSize:'0.82rem',color:'#9ca3af'}}>
+                          <span>📍 Meet point: <strong style={{color:'white'}}>{task.dist} from you</strong></span>
+                          <span>⏰ Report by: <strong style={{color:'white'}}>{task.deadline}</strong></span>
+                          <span>📞 Coordinator: <strong style={{color:'white'}}>+91 98765 43210</strong></span>
+                        </div>
+                        <div style={{display:'flex',gap:'0.7rem',marginTop:'0.8rem',flexWrap:'wrap'}}>
+                          <button onClick={() => addToast('📞 Calling coordinator...','info')} style={{padding:'0.45rem 1rem',borderRadius:'8px',background:'#10b981',color:'white',border:'none',cursor:'pointer',fontWeight:600,fontSize:'0.8rem',fontFamily:'var(--font-body)'}}>
+                            📞 Call Coordinator
+                          </button>
+                          <button onClick={() => addToast('🗺️ Opening maps...','info')} style={{padding:'0.45rem 1rem',borderRadius:'8px',background:'rgba(255,255,255,0.08)',color:'white',border:'1px solid rgba(255,255,255,0.15)',cursor:'pointer',fontWeight:600,fontSize:'0.8rem',fontFamily:'var(--font-body)'}}>
+                            🗺️ Get Directions
+                          </button>
+                          <button onClick={() => { setAcceptedTasks(p => ({...p,[task.id]:false})); addToast('Mission cancelled','warning'); }} style={{padding:'0.45rem 1rem',borderRadius:'8px',background:'rgba(239,68,68,0.1)',color:'#f87171',border:'1px solid rgba(239,68,68,0.25)',cursor:'pointer',fontWeight:600,fontSize:'0.8rem',fontFamily:'var(--font-body)'}}>
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div style={{display:'flex',flexDirection:'column',gap:'0.7rem',justifyContent:'center',minWidth:160}}>
-                    <button onClick={()=>handleAccept(task)} disabled={acceptedTasks[task.id]}
-                      style={{padding:'0.8rem 1.5rem',borderRadius:'12px',border:'none',background:acceptedTasks[task.id]?'#10b981':'var(--primary-500)',color:'white',fontWeight:700,cursor:acceptedTasks[task.id]?'default':'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:'0.5rem',fontFamily:'var(--font-body)'}}>
-                      {acceptedTasks[task.id]?<><CheckCircle size={16}/> Accepted</>:<><Zap size={16}/> Accept Mission</>}
-                    </button>
-                    <button onClick={()=>addToast(`🧭 AR Navigation launching for "${task.title}"`,'info')}
-                      style={{padding:'0.8rem',borderRadius:'12px',border:'1px solid var(--border-light)',background:'transparent',color:'var(--text-primary)',cursor:'pointer',fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:'0.5rem',fontFamily:'var(--font-body)'}}>
-                      <Compass size={16}/> AR Navigate
-                    </button>
-                    <button onClick={()=>addToast(`📤 Sharing task: "${task.title}"`,'info')}
-                      style={{padding:'0.8rem',borderRadius:'12px',border:'1px solid var(--border-light)',background:'transparent',color:'var(--text-primary)',cursor:'pointer',fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:'0.5rem',fontFamily:'var(--font-body)'}}>
-                      <Share2 size={16}/> Share
-                    </button>
-                  </div>
-                </motion.div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
