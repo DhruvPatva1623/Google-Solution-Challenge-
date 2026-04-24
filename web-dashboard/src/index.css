@@ -306,3 +306,39 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 800; line-height
 @media (max-width: 768px) {
   .mobile-nav { display: flex; }
 }
+
+/* ─── Background Elevated (used in bento cards) ─── */
+:root {
+  --bg-elevated: #f0f0f0;
+}
+[data-theme="dark"] {
+  --bg-elevated: #111111;
+}
+
+/* ─── Custom Scrollbar ─── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--primary-500); }
+
+/* ─── Input Focus States ─── */
+input:focus, select:focus, textarea:focus {
+  border-color: var(--primary-500) !important;
+  box-shadow: 0 0 0 3px rgba(249,115,22,0.15);
+}
+
+/* ─── Dashboard Tab Scroll on Mobile ─── */
+@media (max-width: 900px) {
+  .bento-grid { grid-template-columns: 1fr !important; }
+  .navbar-content nav { display: none; }
+}
+
+/* ─── Smooth transitions on interactive items ─── */
+button, a { transition: all 0.2s var(--ease-smooth); }
+button:active { transform: scale(0.97); }
+
+/* ─── Profile Panel Scrollbar accent ─── */
+.profile-scroll::-webkit-scrollbar-thumb { background: var(--primary-500); }
+
+/* ─── Chart canvas fix ─── */
+canvas { max-width: 100% !important; }
