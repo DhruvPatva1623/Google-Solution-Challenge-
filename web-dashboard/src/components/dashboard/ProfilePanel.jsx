@@ -75,7 +75,12 @@ export function ProfilePanel({ user, onClose, onUpdate, addToast }) {
             </div>
             <div style={{color:'white'}}>
               <h2 style={{fontSize:'1.5rem',fontWeight:800}}>{user.name}</h2>
-              <p style={{opacity:0.85,fontSize:'0.9rem'}}>{user.org||'Community Volunteer'} · {user.city}</p>
+              <div style={{display:'flex',alignItems:'center',gap:'0.5rem',marginTop:'0.2rem'}}>
+                <span style={{background:'rgba(255,255,255,0.2)',padding:'0.1rem 0.6rem',borderRadius:'6px',fontSize:'0.65rem',fontWeight:800,textTransform:'uppercase',letterSpacing:'0.5px'}}>
+                  {user.role === 'ngo' ? '🏢 Organization' : '🤝 Volunteer'}
+                </span>
+                <p style={{opacity:0.85,fontSize:'0.9rem'}}>{user.org || (user.role === 'ngo' ? 'Authorized NGO' : 'Community Member')} · {user.city}</p>
+              </div>
               <div style={{display:'flex',gap:'0.5rem',marginTop:'0.5rem',flexWrap:'wrap'}}>
                 <span style={{background:'rgba(255,255,255,0.2)',padding:'0.2rem 0.7rem',borderRadius:'99px',fontSize:'0.75rem',fontWeight:700}}>
                   ⭐ {user.level||'Newcomer'}

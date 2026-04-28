@@ -1,4 +1,4 @@
-import { AlertCircle, Clock, CheckCircle } from 'lucide-react';
+import { AlertCircle, Clock, CheckCircle, ArrowLeft, ArrowRight } from 'lucide-react';
 import { AvatarPlaceholder } from '../common/AvatarPlaceholder';
 
 export function Navbar({ theme, setTheme, handleSos, currentUser, setShowDashboard, setShowProfile, setShowAuthModal, activeSessionSecs, isCheckingIn, onCheckOut }) {
@@ -34,10 +34,20 @@ export function Navbar({ theme, setTheme, handleSos, currentUser, setShowDashboa
           </nav>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginRight: '1rem', borderRight: '1px solid var(--border-light)', paddingRight: '1rem' }}>
+            <button onClick={() => window.history.back()} style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)', padding: '0.5rem', borderRadius: '8px', cursor: 'pointer', color: 'var(--text-primary)', display: 'flex', alignItems: 'center' }} title="Back">
+              <ArrowLeft size={16} />
+            </button>
+            <button onClick={() => window.history.forward()} style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)', padding: '0.5rem', borderRadius: '8px', cursor: 'pointer', color: 'var(--text-primary)', display: 'flex', alignItems: 'center' }} title="Forward">
+              <ArrowRight size={16} />
+            </button>
+          </div>
           <button onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} style={{ background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer' }} aria-label="Toggle theme">
             {theme === 'dark' ? '🌑' : '☀️'}
           </button>
-          <button onClick={handleSos} className="sos-btn" aria-label="Emergency SOS"><AlertCircle size={20} /> SOS</button>
+          {currentUser?.role === 'ngo' && (
+            <button onClick={handleSos} className="sos-btn" aria-label="Emergency SOS"><AlertCircle size={20} /> SOS</button>
+          )}
           {currentUser ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
               <button onClick={() => setShowDashboard(true)} className="btn-magic">My Dashboard</button>

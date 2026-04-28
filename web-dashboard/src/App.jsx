@@ -28,7 +28,19 @@ import { IMPACT_DATA, LANDING_TASKS, LEADERBOARD_DATA, TESTIMONIALS, GOVT_SCHEME
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, ArcElement);
 
 function App() {
-  const [theme, setTheme] = useState('dark')
+  // State Persistence Initialization
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark')
+  const [currentUser, setCurrentUser] = useState(() => {
+    const saved = localStorage.getItem('currentUser');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [showDashboard, setShowDashboard] = useState(() => {
+    return localStorage.getItem('showDashboard') === 'true';
+  });
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('activeTab') || 'overview';
+  });
+
   const cursorRef = useRef(null)
   const blobRef = useRef(null)
   const [sosActive, setSosActive] = useState(false)
@@ -38,8 +50,6 @@ function App() {
   const [acceptedTasks, setAcceptedTasks] = useState({})
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showSchemeResult, setShowSchemeResult] = useState(false)
-  const [currentUser, setCurrentUser] = useState(null)
-  const [showDashboard, setShowDashboard] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
   const [showSplash, setShowSplash] = useState(true)
   const [showSosModal, setShowSosModal] = useState(false)
@@ -100,29 +110,6 @@ function App() {
     addToast(`🏁 Session ended! You contributed ${durationHrs} hours.`, 'success');
   };
 
-  // Simulate real-time mission discovery - DISABLED to prevent spamming as per user request
-  /*
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (Math.random() > 0.8) {
-        const newMission = {
-          id: Date.now(),
-          topic: "🚨 EMERGENCY: Food Distribution",
-          name: "Rahul Verma",
-          org: "Goonj NGO",
-          reason: "Critical shortage of supplies in sector 12. Urgent help needed.",
-          time: "Immediate",
-          location: "Sector 12, Delhi",
-          timestamp: new Date().toISOString()
-        };
-        setEmergencyMissions(prev => [newMission, ...prev]);
-        addToast(`🚨 NEW CRITICAL MISSION: ${newMission.topic}`, 'error');
-      }
-    }, 15000);
-    return () => clearInterval(interval);
-  }, []);
-  */
-
   const [livesCount, livesRef] = useCounter(50389, 2500);
   const [volCount, volRef] = useCounter(10245, 2000);
   const [taskCount, taskRef] = useCounter(8742, 2200);
@@ -179,22 +166,43 @@ function App() {
     addToast(`✅ Mission accepted: "${taskTitle}" — GPS routing started`, 'success');
   }
 
+  // Persistence Effects
+  useEffect(() => {
+    localStorage.setItem('theme', theme);
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem('currentUser');
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    localStorage.setItem('showDashboard', showDashboard);
+  }, [showDashboard]);
+
+  useEffect(() => {
+    localStorage.setItem('activeTab', activeTab);
+  }, [activeTab]);
+
   const handleLogin = (user) => {
-    setCurrentUser(user);
-    setShowAuthModal(false);
-    setShowDashboard(true);
-  };
+    setCurrentUser(user)
+    setShowAuthModal(false)
+    setShowDashboard(true)
+  }
 
   const handleLogout = () => {
-    setCurrentUser(null);
-    setShowDashboard(false);
-    setShowProfile(false);
-    addToast('👋 Logged out successfully. See you soon!','info');
-  };
+    setCurrentUser(null)
+    setShowDashboard(false)
+    localStorage.clear()
+    addToast('👋 Logged out successfully', 'info')
+  }
 
   const handleProfileUpdate = (updated) => setCurrentUser(updated);
 
-  useEffect(() => { document.documentElement.setAttribute('data-theme', theme) }, [theme])
 
   useEffect(() => {
     document.querySelectorAll('a[href^="#"]').forEach(a => {
@@ -279,25 +287,29 @@ function App() {
             <NgoDashboard
               user={currentUser}
               onLogout={handleLogout}
-              onOpenProfile={()=>{setShowProfile(true);setShowDashboard(false)}}
+              onOpenProfile={() => setShowProfile(true)}
               addToast={addToast}
               emergencyMissions={emergencyMissions}
-              onTriggerSos={handleSos}
+              onTriggerSos={() => setShowSosModal(true)}
+              theme={theme}
+              setTheme={setTheme}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
             />
           ) : (
             <VolunteerDashboard
               user={currentUser}
-              addToast={addToast}
               onLogout={handleLogout}
-              onOpenProfile={()=>{setShowProfile(true);setShowDashboard(false)}}
-              emergencyMissions={emergencyMissions}
-              onViewHost={setShowHostProfile}
-              theme={theme}
-              setTheme={setTheme}
-              activeSessionSecs={activeSessionSecs}
-              isCheckingIn={!!checkInTime}
+              onOpenProfile={() => setShowProfile(true)}
+              addToast={addToast}
               onCheckIn={handleCheckIn}
               onCheckOut={handleCheckOut}
+              activeSessionSecs={activeSessionSecs}
+              isCheckingIn={!!checkInTime}
+              onMissionAccept={handleAcceptTask}
+              acceptedTasks={acceptedTasks}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
             />
           )
         )}

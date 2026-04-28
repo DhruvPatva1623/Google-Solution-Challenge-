@@ -4,9 +4,7 @@ import { Bell, LogOut, CheckCircle, Target, User, MapPin, ChevronRight, Zap, Com
 import { Bar, Doughnut } from 'react-chartjs-2';
 import { AvatarPlaceholder } from '../common/AvatarPlaceholder';
 
-export function VolunteerDashboard({ user, addToast, onLogout, onOpenProfile, emergencyMissions = [], onViewHost, theme, setTheme, isCheckingIn, activeSessionSecs, onCheckIn, onCheckOut }) {
-  const [activeTab, setActiveTab] = useState('overview');
-  const [acceptedTasks, setAcceptedTasks] = useState({});
+export function VolunteerDashboard({ user, addToast, onLogout, onOpenProfile, emergencyMissions = [], onViewHost, theme, setTheme, isCheckingIn, activeSessionSecs, onCheckIn, onCheckOut, activeTab, setActiveTab, onMissionAccept, acceptedTasks }) {
   const [notifications, setNotifications] = useState([
     {id:1,text:'New CRITICAL task: Flood Relief in Kheda',time:'2m ago',read:false,type:'urgent'},
     {id:2,text:'You earned the "City Hero" badge! 🏙️',time:'1h ago',read:false,type:'success'},
@@ -46,8 +44,7 @@ export function VolunteerDashboard({ user, addToast, onLogout, onOpenProfile, em
   const markRead = (id) => setNotifications(prev=>prev.map(n=>n.id===id?{...n,read:true}:n));
 
   const handleAccept = (task) => {
-    setAcceptedTasks(p=>({...p,[task.id]:true}));
-    addToast(`✅ Mission accepted: "${task.title}" — GPS routing started`,'success');
+    onMissionAccept(task.id, task.title);
   };
 
 
@@ -150,7 +147,13 @@ export function VolunteerDashboard({ user, addToast, onLogout, onOpenProfile, em
               <div style={{color:'white'}}>
                 <p style={{opacity:0.85,marginBottom:'0.3rem'}}>Good {new Date().getHours()<12?'Morning':'Afternoon'},</p>
                 <h2 style={{fontSize:'2rem',fontWeight:800}}>Welcome back, {user.name.split(' ')[0]}! 👋</h2>
-                <p style={{opacity:0.85,marginTop:'0.3rem'}}>You have <strong>3 active missions</strong> near you. Ready to make an impact?</p>
+                <div style={{display:'flex',gap:'1rem',marginTop:'0.4rem',flexWrap:'wrap'}}>
+                  {user.age && <span style={{background:'rgba(255,255,255,0.15)',padding:'0.2rem 0.8rem',borderRadius:'99px',fontSize:'0.75rem',fontWeight:700}}>🎂 {user.age} Years Old</span>}
+                  {(user.interests || []).slice(0,3).map((it,idx) => (
+                    <span key={idx} style={{background:'rgba(255,255,255,0.15)',padding:'0.2rem 0.8rem',borderRadius:'99px',fontSize:'0.75rem',fontWeight:700}}>✨ {it}</span>
+                  ))}
+                </div>
+                <p style={{opacity:0.85,marginTop:'0.8rem'}}>You have <strong>3 active missions</strong> near you. Ready to make an impact?</p>
               </div>
               <div style={{display:'flex',gap:'1rem',flexWrap:'wrap'}}>
                 <button onClick={isCheckingIn ? onCheckOut : onCheckIn} style={{padding:'0.9rem 1.8rem',borderRadius:'14px',background:isCheckingIn?'rgba(255,255,255,0.3)':'white',color:isCheckingIn?'white':'var(--primary-500)',border:'none',cursor:'pointer',fontWeight:700,display:'flex',alignItems:'center',gap:'0.6rem',fontSize:'1rem',fontFamily:'var(--font-body)',position:'relative'}}>

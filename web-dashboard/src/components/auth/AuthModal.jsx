@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import { X, Phone, Mail } from 'lucide-react';
 
 export function AuthModal({ onClose, onLogin, addToast }) {
-  const [step, setStep] = useState('choose'); // choose | email-login | phone-login | email-register | profile | otp
+  const [step, setStep] = useState('choose-role'); // choose-role | choose-method | email-login | ...
+  const [role, setRole] = useState('volunteer'); // volunteer | ngo
   const [method, setMethod] = useState('');
   const [form, setForm] = useState({});
   const [otpSent, setOtpSent] = useState(false);
@@ -16,54 +17,28 @@ export function AuthModal({ onClose, onLogin, addToast }) {
   // ── DUMMY DEMO ACCOUNTS — remove later when real Firebase auth is wired ──
   const DUMMY_ACCOUNTS = [
     {
-      id: 'demo1',
-      label: '🧑‍💻 Demo 1 — Priya Sharma (Volunteer · Champion)',
-      tag: '4820 pts',
-      tagColor: '#8b5cf6',
+      id: 'demo-vol',
+      label: '🤝 Volunteer Demo — Priya Sharma',
+      tag: 'Volunteer',
+      tagColor: '#f97316',
       user: {
-        name:'Priya Sharma', email:'priya@demo.com', phone:'9876543210', method:'demo',
-        avatar:null, city:'Mumbai', state:'Maharashtra', dob:'1998-06-15', gender:'Female',
-        skills:['First Aid','Teaching','Social Media'],
-        languages:['Hindi','English','Marathi'],
-        availability:'Weekends only', org:'Tata Institute of Social Sciences',
-        role:'volunteer',
-        bio:'Passionate social worker with 3 years of NGO experience. Love making communities stronger through education and healthcare.',
-        volunteerHours:340, points:4820, level:'Champion',
-        joinDate:'2024-03-10', verifiedId:true, aadhar:'xxxx-5678',
-        address:'Bandra West, Mumbai - 400050',
-        emergencyContact:'Rajesh Sharma — +91 9812345678',
-        interests:['Education','Healthcare','Women Empowerment'],
-        notifications:{email:true, sms:true, push:true},
-        history: [
-          {id: 1, title: 'Blood Donation Camp', date: '2026-04-10', hrs: 4, status: 'Completed', pts: 200},
-          {id: 2, title: 'Tree Plantation Drive', date: '2026-03-22', hrs: 6, status: 'Completed', pts: 300},
-          {id: 3, title: 'Scholarship Form Fill-Up', date: '2026-03-05', hrs: 3, status: 'Completed', pts: 150}
-        ]
+        name:'Priya Sharma', email:'priya@demo.com', role:'volunteer', age:24, city:'Mumbai',
+        skills:['Teaching','First Aid'], interests:['Education','Healthcare'],
+        volunteerHours:120, points:1450, level:'Hero', joinDate:'2024-01-15',
+        history: [{id:1, title:'Slum Education', date:'2026-04-10', hrs:4, pts:200, status:'Completed'}]
       }
     },
     {
-      id: 'demo2',
-      label: '👨‍🎓 Demo 2 — Rahul Verma (NGO Coordinator · Legend)',
-      tag: '3950 pts',
-      tagColor: '#ec4899',
+      id: 'demo-ngo',
+      label: '🏢 NGO Demo — Goonj Foundation',
+      tag: 'Organization',
+      tagColor: '#3b82f6',
       user: {
-        name:'Rahul Verma', email:'rahul@demo.com', phone:'9123456789', method:'demo',
-        avatar:null, city:'Delhi', state:'Delhi', dob:'1995-11-22', gender:'Male',
-        skills:['Logistics','Leadership','Driving','Carpentry'],
-        languages:['Hindi','English','Punjabi'],
-        availability:'Flexible / Any time', org:'Delhi University — Social Work Dept.',
-        role:'ngo',
-        bio:'NGO coordinator with 6+ years experience in disaster relief and rural development. Coordinated 500+ volunteers across 12 states.',
-        volunteerHours:620, points:3950, level:'Legend',
-        joinDate:'2023-08-05', verifiedId:true, aadhar:'xxxx-9012',
-        address:'Vasant Kunj, New Delhi - 110070',
-        emergencyContact:'Anita Verma — +91 9887654321',
-        interests:['Disaster Relief','Rural Development','Education'],
-        notifications:{email:true, sms:false, push:true},
-        history: [
-          {id: 4, title: 'Flood Relief - Kheda', date: '2026-02-15', hrs: 12, status: 'Completed', pts: 600},
-          {id: 5, title: 'Rural Healthcare Camp', date: '2026-01-10', hrs: 8, status: 'Completed', pts: 400}
-        ]
+        name:'Anshul Gupta', email:'ngo@demo.com', role:'ngo', org:'Goonj Foundation',
+        established:'1999', city:'Delhi', regId:'NGO-8822-DL',
+        vision:'Bridging the gap between urban discard and rural needs.',
+        activeMissions:14, impactScore:9.8,
+        history: []
       }
     }
   ];
@@ -115,7 +90,8 @@ export function AuthModal({ onClose, onLogin, addToast }) {
         volunteerHours:0, points:0, level:'Newcomer',
         joinDate: new Date().toISOString().split('T')[0], verifiedId:false, aadhar:'',
         address:'', emergencyContact:'', interests:[],
-        notifications:{email:false, sms:true, push:true}
+        notifications:{email:false, sms:true, push:true},
+        role // injected from state
       };
       addToast('✅ Phone verified! Welcome to CommunityConnect','success');
       onLogin(user);
@@ -129,16 +105,19 @@ export function AuthModal({ onClose, onLogin, addToast }) {
     setTimeout(() => {
       setLoading(false);
       if (isLogin) {
-        const name = (form.email||'').split('@')[0].replace(/[^a-zA-Z ]/g,' ').trim() || 'Volunteer';
-        const user = {
-          name, email:form.email, phone:'', method:'email',
-          avatar:null, city:'', state:'', dob:'', gender:'', skills:[], languages:[],
-          availability:'', org:'', bio:'', volunteerHours:0, points:0, level:'Newcomer',
-          joinDate: new Date().toISOString().split('T')[0], verifiedId:false, aadhar:'',
-          address:'', emergencyContact:'', interests:[], notifications:{email:true,sms:false,push:true}
-        };
-        addToast('✅ Login successful! Welcome back 👋','success');
-        onLogin(user);
+        const demoAcc = DUMMY_ACCOUNTS.find(a => a.user.email === form.email);
+        if (demoAcc) {
+          if (demoAcc.user.role !== role) {
+            addToast(`Account mismatch: This email is for a ${demoAcc.user.role}.`, 'error');
+            return;
+          }
+          addToast('✅ Login successful! Welcome back 👋', 'success');
+          onLogin(demoAcc.user);
+        } else {
+          // New account simulation
+          const name = (form.email||'').split('@')[0].replace(/[^a-zA-Z ]/g,' ').trim() || (role === 'ngo' ? 'New NGO' : 'Volunteer');
+          onLogin({ name, email:form.email, role, points:0, level:'Newcomer', history:[] });
+        }
       } else { setStep('profile'); }
     }, 900);
   };
@@ -171,7 +150,8 @@ export function AuthModal({ onClose, onLogin, addToast }) {
     transition:'border 0.2s', fontFamily:'var(--font-body)'
   };
   const labelStyle = { display:'block', fontWeight:600, marginBottom:'0.3rem', fontSize:'0.85rem', color:'var(--text-secondary)' };
-  const rowStyle = { display:'grid', gridTemplateColumns:'1fr 1fr', gap:'1rem' };
+  const rowStyle = { display:'flex', gap:'1rem', flexWrap:'wrap' };
+  const colStyle = { flex:1, minWidth:'140px' };
 
   return (
     <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={onClose}
@@ -180,11 +160,41 @@ export function AuthModal({ onClose, onLogin, addToast }) {
         onClick={e=>e.stopPropagation()} className="glass-panel"
         style={{padding:'2.5rem',borderRadius:'28px',maxWidth:'520px',width:'100%',maxHeight:'90vh',overflowY:'auto',position:'relative'}}>
         
+        {/* STEP: CHOOSE ROLE */}
+        {step === 'choose-role' && (
+          <>
+            <div style={{textAlign:'center',marginBottom:'2rem'}}>
+              <div style={{fontSize:'3.5rem',marginBottom:'1rem'}}>🚀</div>
+              <h2 style={{fontSize:'2rem',fontWeight:800}}>How will you help?</h2>
+              <p style={{color:'var(--text-secondary)',marginTop:'0.5rem'}}>Choose your path to start making an impact.</p>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'1.5rem',marginBottom:'1rem'}}>
+              <button onClick={()=>{setRole('volunteer');setStep('choose')}} 
+                style={{padding:'2rem 1rem',borderRadius:'20px',border:'2px solid var(--primary-500)',background:'rgba(249,115,22,0.05)',cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:'1rem',transition:'all 0.3s'}}
+                onMouseEnter={e=>e.currentTarget.style.transform='translateY(-5px)'}
+                onMouseLeave={e=>e.currentTarget.style.transform='translateY(0)'}>
+                <div style={{fontSize:'3rem'}}>🤝</div>
+                <div style={{fontWeight:800,fontSize:'1.1rem'}}>Volunteer</div>
+                <div style={{fontSize:'0.75rem',color:'var(--text-secondary)',textAlign:'center'}}>I want to join missions and earn rewards.</div>
+              </button>
+              <button onClick={()=>{setRole('ngo');setStep('choose')}} 
+                style={{padding:'2rem 1rem',borderRadius:'20px',border:'2px solid var(--accent-highlight)',background:'rgba(59,130,246,0.05)',cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:'1rem',transition:'all 0.3s'}}
+                onMouseEnter={e=>e.currentTarget.style.transform='translateY(-5px)'}
+                onMouseLeave={e=>e.currentTarget.style.transform='translateY(0)'}>
+                <div style={{fontSize:'3rem'}}>🏢</div>
+                <div style={{fontWeight:800,fontSize:'1.1rem'}}>Organization</div>
+                <div style={{fontSize:'0.75rem',color:'var(--text-secondary)',textAlign:'center'}}>I want to create opportunities and monitor impact.</div>
+              </button>
+            </div>
+          </>
+        )}
+
         <button onClick={onClose} style={{position:'absolute',top:'1.2rem',right:'1.2rem',background:'var(--bg-secondary)',border:'1px solid var(--border-light)',borderRadius:'50%',width:32,height:32,display:'grid',placeItems:'center',cursor:'pointer',color:'var(--text-primary)'}}><X size={16}/></button>
 
         {/* STEP: CHOOSE METHOD */}
         {step === 'choose' && (
           <>
+            <button onClick={()=>setStep('choose-role')} style={{background:'none',border:'none',color:'var(--text-secondary)',cursor:'pointer',fontWeight:600,marginBottom:'1.5rem',display:'flex',alignItems:'center',gap:'0.4rem',fontSize:'0.9rem'}}>← Back to Role</button>
             <div style={{textAlign:'center',marginBottom:'1.5rem'}}>
               <div style={{fontSize:'3rem',marginBottom:'0.5rem'}}>🔐</div>
               <h2 style={{fontSize:'1.8rem'}}>Join CommunityConnect</h2>
@@ -320,49 +330,59 @@ export function AuthModal({ onClose, onLogin, addToast }) {
           </>
         )}
 
-        {/* STEP: PROFILE (Collect volunteer details) */}
+        {/* STEP: PROFILE SETUP */}
         {step === 'profile' && (
           <>
             <div style={{textAlign:'center',marginBottom:'2rem'}}>
               <div style={{fontSize:'2.5rem',marginBottom:'0.5rem'}}>👤</div>
-              <h2 style={{fontSize:'1.6rem'}}>Complete Your Profile</h2>
-              <p style={{color:'var(--text-secondary)',marginTop:'0.4rem'}}>Help us match you with the perfect volunteering opportunities.</p>
+              <h2 style={{fontSize:'1.6rem'}}>Complete Your {role === 'ngo' ? 'Organization' : 'Volunteer'} Profile</h2>
+              <p style={{color:'var(--text-secondary)',marginTop:'0.4rem'}}>Tell us more to customize your experience.</p>
             </div>
-            <div style={{display:'flex',flexDirection:'column',gap:'1rem'}}>
-              <div style={rowStyle}>
-                <div><label style={labelStyle}>Full Name *</label><input style={inputStyle} placeholder="Full name" value={form.name||''} onChange={e=>set('name',e.target.value)}/></div>
-                <div><label style={labelStyle}>Gender</label>
-                  <select style={inputStyle} value={form.gender||''} onChange={e=>set('gender',e.target.value)}>
-                    <option value="">Select</option><option>Male</option><option>Female</option><option>Non-binary</option><option>Prefer not to say</option>
-                  </select>
-                </div>
-              </div>
-              <div style={rowStyle}>
-                <div><label style={labelStyle}>Date of Birth *</label><input style={inputStyle} type="date" value={form.dob||''} onChange={e=>set('dob',e.target.value)}/></div>
-                <div><label style={labelStyle}>Mobile Number</label><input style={inputStyle} placeholder="+91 XXXXXXXXXX" value={form.phone||''} onChange={e=>set('phone',e.target.value)}/></div>
-              </div>
-              <div><label style={labelStyle}>Full Address</label><input style={inputStyle} placeholder="House/Street/Locality" value={form.address||''} onChange={e=>set('address',e.target.value)}/></div>
-              <div style={rowStyle}>
-                <div><label style={labelStyle}>City *</label><input style={inputStyle} placeholder="City" value={form.city||''} onChange={e=>set('city',e.target.value)}/></div>
-                <div><label style={labelStyle}>State</label><input style={inputStyle} placeholder="State" value={form.state||''} onChange={e=>set('state',e.target.value)}/></div>
-              </div>
-              <div><label style={labelStyle}>Organization / School / College</label><input style={inputStyle} placeholder="Where do you study/work?" value={form.org||''} onChange={e=>set('org',e.target.value)}/></div>
-              <div><label style={labelStyle}>Skills (comma-separated)</label><input style={inputStyle} placeholder="e.g. Teaching, First Aid, Coding" value={form.skills||''} onChange={e=>set('skills',e.target.value)}/></div>
-              <div><label style={labelStyle}>Languages Known</label><input style={inputStyle} placeholder="e.g. Hindi, English, Gujarati" value={form.languages||''} onChange={e=>set('languages',e.target.value)}/></div>
-              <div><label style={labelStyle}>Areas of Interest</label><input style={inputStyle} placeholder="e.g. Education, Healthcare, Environment" value={form.interests||''} onChange={e=>set('interests',e.target.value)}/></div>
-              <div><label style={labelStyle}>Availability</label>
-                <select style={inputStyle} value={form.availability||''} onChange={e=>set('availability',e.target.value)}>
-                  <option value="">Select availability</option>
-                  <option>Weekdays only</option><option>Weekends only</option><option>Weekdays & Weekends</option><option>Flexible / Any time</option>
-                </select>
-              </div>
-              <div><label style={labelStyle}>Aadhaar (last 4 digits for verification)</label><input style={inputStyle} placeholder="XXXX" maxLength={4} value={form.aadhar||''} onChange={e=>set('aadhar',e.target.value)}/></div>
-              <div><label style={labelStyle}>Emergency Contact</label><input style={inputStyle} placeholder="Name — Phone number" value={form.emergencyContact||''} onChange={e=>set('emergencyContact',e.target.value)}/></div>
-              <div><label style={labelStyle}>Short Bio</label><textarea style={{...inputStyle,minHeight:80,resize:'vertical'}} placeholder="Tell us about yourself and why you volunteer..." value={form.bio||''} onChange={e=>set('bio',e.target.value)}/></div>
+            
+            <div style={{display:'flex',flexDirection:'column',gap:'1.2rem'}}>
+              {role === 'volunteer' ? (
+                <>
+                  <div><label style={labelStyle}>Full Name</label>
+                  <input style={inputStyle} placeholder="Priya Sharma" onChange={e=>set('name',e.target.value)}/></div>
+                  <div style={rowStyle}>
+                    <div style={colStyle}><label style={labelStyle}>Age</label>
+                    <input type="number" style={inputStyle} placeholder="24" onChange={e=>set('age',e.target.value)}/></div>
+                    <div style={colStyle}><label style={labelStyle}>Gender</label>
+                    <select style={inputStyle} onChange={e=>set('gender',e.target.value)}>
+                      <option>Male</option><option>Female</option><option>Other</option>
+                    </select></div>
+                  </div>
+                  <div><label style={labelStyle}>Skills (e.g. Teaching, Health)</label>
+                  <input style={inputStyle} placeholder="First Aid, Coding..." onChange={e=>set('skills',e.target.value.split(','))}/></div>
+                  <div><label style={labelStyle}>Areas of Interest</label>
+                  <input style={inputStyle} placeholder="Education, Environment..." onChange={e=>set('interests',e.target.value.split(','))}/></div>
+                </>
+              ) : (
+                <>
+                  <div><label style={labelStyle}>Organization / Company Name</label>
+                  <input style={inputStyle} placeholder="Goonj NGO" onChange={e=>set('org',e.target.value)}/></div>
+                  <div style={rowStyle}>
+                    <div style={colStyle}><label style={labelStyle}>Year Established</label>
+                    <input type="number" style={inputStyle} placeholder="1999" onChange={e=>set('established',e.target.value)}/></div>
+                    <div style={colStyle}><label style={labelStyle}>Registration ID</label>
+                    <input style={inputStyle} placeholder="NGO-8822-DL" onChange={e=>set('regId',e.target.value)}/></div>
+                  </div>
+                  <div><label style={labelStyle}>Mission / Why join us?</label>
+                  <textarea style={{...inputStyle, minHeight:'80px'}} placeholder="What is your organization's primary goal?" onChange={e=>set('vision',e.target.value)}/></div>
+                </>
+              )}
+
+              <button className="btn-magic" style={{width:'100%',padding:'1rem',marginTop:'1rem'}} onClick={() => {
+                const user = {
+                  ...form, role,
+                  volunteerHours: 0, points: 0, level: 'Newcomer',
+                  history: [],
+                  name: form.name || form.org || 'Anonymous'
+                };
+                addToast('🚀 Account created! Welcome aboard.', 'success');
+                onLogin(user);
+              }}>Start My Journey</button>
             </div>
-            <button onClick={handleProfileSubmit} disabled={loading} className="btn-magic" style={{width:'100%',padding:'1rem',marginTop:'1.5rem'}}>
-              {loading ? 'Saving Profile...' : '🚀 Launch My Dashboard'}
-            </button>
           </>
         )}
       </motion.div>

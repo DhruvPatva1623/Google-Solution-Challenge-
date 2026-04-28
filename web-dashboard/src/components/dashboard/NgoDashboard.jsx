@@ -8,8 +8,7 @@ import {
 import { Bar, Line, Doughnut } from 'react-chartjs-2';
 import { AvatarPlaceholder } from '../common/AvatarPlaceholder';
 
-export function NgoDashboard({ user, onLogout, onOpenProfile, addToast, emergencyMissions = [], onTriggerSos, theme, setTheme }) {
-  const [activeTab, setActiveTab] = useState('overview');
+export function NgoDashboard({ user, onLogout, onOpenProfile, addToast, emergencyMissions = [], onTriggerSos, theme, setTheme, activeTab, setActiveTab }) {
   
   const myMissions = useMemo(() => [
     { id: 101, title: 'Slum Education Drive', status: 'Active', volunteers: 12, target: 15, date: '2026-04-25' },
@@ -72,7 +71,12 @@ export function NgoDashboard({ user, onLogout, onOpenProfile, addToast, emergenc
         {/* Welcome Section */}
         <div style={{ marginBottom: '2.5rem' }}>
           <h1 style={{ fontSize: '2.2rem', fontWeight: 800 }}>Welcome back, {user.name.split(' ')[0]}!</h1>
-          <p style={{ color: '#9ca3af', marginTop: '0.5rem' }}>Manage your organization's impact and coordinate your volunteers across {user.city}.</p>
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '0.6rem', flexWrap: 'wrap', alignItems: 'center' }}>
+            <p style={{ color: '#9ca3af' }}>Coordinating for <strong>{user.org || 'Your Organization'}</strong> in {user.city}.</p>
+            {user.established && <span style={{ background: 'rgba(255,255,255,0.05)', padding: '0.2rem 0.8rem', borderRadius: '89px', fontSize: '0.75rem', color: '#9ca3af' }}>Est. {user.established}</span>}
+            {user.regId && <span style={{ background: 'rgba(59,130,246,0.1)', padding: '0.2rem 0.8rem', borderRadius: '89px', fontSize: '0.75rem', color: '#3b82f6', fontWeight: 700 }}>ID: {user.regId}</span>}
+          </div>
+          {user.vision && <p style={{ marginTop: '1rem', color: '#9ca3af', fontSize: '0.9rem', borderLeft: '3px solid #3b82f6', paddingLeft: '1rem', maxWidth: '800px' }}><i>"{user.vision}"</i></p>}
         </div>
 
         {/* Stats Grid */}
@@ -161,7 +165,7 @@ export function NgoDashboard({ user, onLogout, onOpenProfile, addToast, emergenc
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {myMissions.map(m => (
-                  <div key={m.id} style={{ ...cardS, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div key={m.id} style={{ ...cardS, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.2rem 2rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
                       <div style={{ width: 50, height: 50, borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'grid', placeItems: 'center', fontSize: '1.5rem' }}>📋</div>
                       <div>
@@ -185,6 +189,92 @@ export function NgoDashboard({ user, onLogout, onOpenProfile, addToast, emergenc
                     </div>
                   </div>
                 ))}
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'volunteers' && (
+            <motion.div key="volunteers" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <div>
+                  <h2 style={{ fontSize: '1.8rem', fontWeight: 800 }}>Live Volunteer Monitoring</h2>
+                  <p style={{ color: '#9ca3af', fontSize: '0.9rem' }}>Real-time status of volunteers currently on mission.</p>
+                </div>
+                <div style={{ display: 'flex', gap: '0.8rem' }}>
+                  <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-light)', padding: '0.5rem 1rem', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 10px #10b981' }} />
+                    <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>8 Online</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
+                {[
+                  { name: 'Priya Sharma', mission: 'Slum Education Drive', status: 'Active', time: '02:45:12', location: 'Bandra West' },
+                  { name: 'Arjun Mehra', mission: 'Slum Education Drive', status: 'Active', time: '01:20:05', location: 'Bandra West' },
+                  { name: 'Sneha Kapoor', mission: 'Blood Donation Camp', status: 'Break', time: '00:15:30', location: 'Andheri' },
+                  { name: 'Vikram Singh', mission: 'Tree Plantation', status: 'Just Checked In', time: '00:02:45', location: 'Vasant Kunj' },
+                ].map((v, i) => (
+                  <div key={i} style={{ ...cardS, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.2rem 2rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                      <AvatarPlaceholder name={v.name} size={45} />
+                      <div>
+                        <h4 style={{ fontWeight: 700, fontSize: '1.1rem' }}>{v.name}</h4>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.2rem' }}>
+                          <span style={{ fontSize: '0.8rem', color: '#3b82f6', fontWeight: 600 }}>📍 {v.location}</span>
+                          <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>Mission: {v.mission}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '3rem' }}>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '1.1rem', fontWeight: 800, fontFamily: 'monospace', color: v.status === 'Active' ? '#10b981' : '#f97316' }}>{v.time}</div>
+                        <div style={{ fontSize: '0.7rem', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '1px' }}>Session Time</div>
+                      </div>
+                      <div style={{ 
+                        padding: '0.4rem 1rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 800,
+                        background: v.status === 'Active' ? 'rgba(16,185,129,0.1)' : 'rgba(249,115,22,0.1)',
+                        color: v.status === 'Active' ? '#10b981' : '#f97316',
+                        border: `1px solid ${v.status === 'Active' ? 'rgba(16,185,129,0.2)' : 'rgba(249,115,22,0.2)'}`
+                      }}>
+                        {v.status.toUpperCase()}
+                      </div>
+                      <button style={{ background: 'none', border: 'none', color: '#4b5563', cursor: 'pointer' }}><MoreVertical size={20}/></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'analytics' && (
+            <motion.div key="analytics" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                <div style={cardS}>
+                  <h3 style={{ marginBottom: '1.5rem' }}>Impact Distribution</h3>
+                  <div style={{ height: 300 }}><Doughnut data={{
+                    labels: ['Education', 'Environment', 'Healthcare', 'Disaster Relief'],
+                    datasets: [{
+                      data: [40, 25, 20, 15],
+                      backgroundColor: ['#3b82f6', '#10b981', '#f97316', '#ef4444'],
+                      borderWidth: 0
+                    }]
+                  }} options={{ maintainAspectRatio: false }} /></div>
+                </div>
+                <div style={cardS}>
+                  <h3 style={{ marginBottom: '1.5rem' }}>Weekly Retention</h3>
+                  <div style={{ height: 300 }}><Line data={{
+                    labels: ['W1', 'W2', 'W3', 'W4', 'W5'],
+                    datasets: [{
+                      label: 'Return Rate',
+                      data: [65, 72, 68, 85, 92],
+                      borderColor: '#8b5cf6',
+                      tension: 0.4,
+                      fill: true,
+                      backgroundColor: 'rgba(139, 92, 246, 0.1)'
+                    }]
+                  }} options={{ maintainAspectRatio: false }} /></div>
+                </div>
               </div>
             </motion.div>
           )}
