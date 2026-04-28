@@ -44,7 +44,7 @@ export function VolunteerDashboard({ user, addToast, onLogout, onOpenProfile, em
   const markRead = (id) => setNotifications(prev=>prev.map(n=>n.id===id?{...n,read:true}:n));
 
   const handleAccept = (task) => {
-    onMissionAccept(task.id, task.title);
+    onMissionAccept(task.title, task.id);
   };
 
 
@@ -68,7 +68,7 @@ export function VolunteerDashboard({ user, addToast, onLogout, onOpenProfile, em
   const tabStyle = useCallback((t) => ({
     padding:'0.6rem 1.1rem', borderRadius:'10px', border:'none', cursor:'pointer', fontWeight:600, fontSize:'0.88rem',
     background: activeTab===t ? '#f97316' : 'transparent',
-    color: activeTab===t ? 'white' : '#9ca3af',
+    color: activeTab===t ? 'white' : 'var(--text-secondary)',
     transition:'all 0.15s', fontFamily:'var(--font-body)',
     whiteSpace: 'nowrap',
   }), [activeTab]);
@@ -83,7 +83,7 @@ export function VolunteerDashboard({ user, addToast, onLogout, onOpenProfile, em
 
   return (
     <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
-      style={{position:'fixed',inset:0,background:'var(--bg-primary)',zIndex:9000,overflowY:'auto',paddingBottom:'2rem'}}>
+      style={{position:'fixed',inset:0,background:'transparent',zIndex:9000,overflowY:'auto',paddingBottom:'2rem'}}>
 
       {/* Dashboard Navbar */}
       <div style={{position:'sticky',top:0,zIndex:100,background:'var(--glass-bg)',backdropFilter:'blur(20px)',borderBottom:'1px solid var(--border-light)',padding:'1rem 2rem',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
@@ -156,13 +156,11 @@ export function VolunteerDashboard({ user, addToast, onLogout, onOpenProfile, em
                 <p style={{opacity:0.85,marginTop:'0.8rem'}}>You have <strong>3 active missions</strong> near you. Ready to make an impact?</p>
               </div>
               <div style={{display:'flex',gap:'1rem',flexWrap:'wrap'}}>
-                <button onClick={isCheckingIn ? onCheckOut : onCheckIn} style={{padding:'0.9rem 1.8rem',borderRadius:'14px',background:isCheckingIn?'rgba(255,255,255,0.3)':'white',color:isCheckingIn?'white':'var(--primary-500)',border:'none',cursor:'pointer',fontWeight:700,display:'flex',alignItems:'center',gap:'0.6rem',fontSize:'1rem',fontFamily:'var(--font-body)',position:'relative'}}>
+                <button onClick={isCheckingIn ? () => {} : onCheckIn} style={{padding:'0.9rem 1.8rem',borderRadius:'14px',background:isCheckingIn?'rgba(16,185,129,0.1)':'white',color:isCheckingIn?'#10b981':'var(--primary-500)',border:isCheckingIn?'1px solid #10b981':'none',cursor:isCheckingIn?'default':'pointer',fontWeight:700,display:'flex',alignItems:'center',gap:'0.6rem',fontSize:'1rem',fontFamily:'var(--font-body)'}}>
                   {isCheckingIn ? (
                     <>
-                      <Clock size={18} className="animate-spin-slow" /> 
-                      {Math.floor(activeSessionSecs / 3600).toString().padStart(2, '0')}:
-                      {Math.floor((activeSessionSecs % 3600) / 60).toString().padStart(2, '0')}:
-                      {(activeSessionSecs % 60).toString().padStart(2, '0')}
+                      <div style={{width:10,height:10,borderRadius:'50%',background:'#10b981'}} className="animate-pulse" />
+                      Session Live
                     </>
                   ) : (
                     <><Target size={18}/> Check In</>

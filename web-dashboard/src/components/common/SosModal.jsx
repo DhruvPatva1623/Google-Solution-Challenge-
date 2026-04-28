@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, AlertTriangle, Clock, Info, Shield, User, Building, Heart } from 'lucide-react';
 
-export function SosModal({ user, onClose, onSubmit }) {
+export function SosModal({ user, onClose, onSubmit, isLoading }) {
   const [form, setForm] = useState({
     name: user?.name || '',
     org: user?.org || '',
@@ -147,14 +147,16 @@ export function SosModal({ user, onClose, onSubmit }) {
           <button 
             type="submit" 
             className="btn-magic" 
+            disabled={isLoading}
             style={{ 
               padding: '1.1rem', fontSize: '1.1rem', fontWeight: 800, 
-              background: 'linear-gradient(135deg, #ef4444, #f97316)', 
-              boxShadow: '0 10px 25px rgba(239,68,68,0.4)',
-              border: 'none'
+              background: isLoading ? '#94a3b8' : 'linear-gradient(135deg, #ef4444, #f97316)', 
+              boxShadow: isLoading ? 'none' : '0 10px 25px rgba(239,68,68,0.4)',
+              border: 'none',
+              cursor: isLoading ? 'not-allowed' : 'pointer'
             }}
           >
-            🚨 Broadcast Emergency Mission
+            {isLoading ? '📡 Broadcasting...' : '🚨 Broadcast Emergency Mission'}
           </button>
         </form>
       </motion.div>

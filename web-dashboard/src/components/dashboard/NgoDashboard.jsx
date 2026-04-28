@@ -45,7 +45,7 @@ export function NgoDashboard({ user, onLogout, onOpenProfile, addToast, emergenc
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      style={{ position: 'fixed', inset: 0, background: 'var(--bg-primary)', zIndex: 9000, overflowY: 'auto' }}>
+      style={{ position: 'fixed', inset: 0, background: 'transparent', zIndex: 9000, overflowY: 'auto' }}>
       
       {/* NGO Header */}
       <div style={{ position: 'sticky', top: 0, zIndex: 100, background: 'var(--glass-bg)', backdropFilter: 'blur(20px)', borderBottom: '1px solid var(--border-light)', padding: '1rem 2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -72,11 +72,11 @@ export function NgoDashboard({ user, onLogout, onOpenProfile, addToast, emergenc
         <div style={{ marginBottom: '2.5rem' }}>
           <h1 style={{ fontSize: '2.2rem', fontWeight: 800 }}>Welcome back, {user.name.split(' ')[0]}!</h1>
           <div style={{ display: 'flex', gap: '1rem', marginTop: '0.6rem', flexWrap: 'wrap', alignItems: 'center' }}>
-            <p style={{ color: '#9ca3af' }}>Coordinating for <strong>{user.org || 'Your Organization'}</strong> in {user.city}.</p>
-            {user.established && <span style={{ background: 'rgba(255,255,255,0.05)', padding: '0.2rem 0.8rem', borderRadius: '89px', fontSize: '0.75rem', color: '#9ca3af' }}>Est. {user.established}</span>}
+            <p style={{ color: 'var(--text-secondary)' }}>Coordinating for <strong>{user.org || 'Your Organization'}</strong> in {user.city}.</p>
+            {user.established && <span style={{ background: 'rgba(255,255,255,0.05)', padding: '0.2rem 0.8rem', borderRadius: '89px', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Est. {user.established}</span>}
             {user.regId && <span style={{ background: 'rgba(59,130,246,0.1)', padding: '0.2rem 0.8rem', borderRadius: '89px', fontSize: '0.75rem', color: '#3b82f6', fontWeight: 700 }}>ID: {user.regId}</span>}
           </div>
-          {user.vision && <p style={{ marginTop: '1rem', color: '#9ca3af', fontSize: '0.9rem', borderLeft: '3px solid #3b82f6', paddingLeft: '1rem', maxWidth: '800px' }}><i>"{user.vision}"</i></p>}
+          {user.vision && <p style={{ marginTop: '1rem', color: 'var(--text-secondary)', fontSize: '0.9rem', borderLeft: '3px solid #3b82f6', paddingLeft: '1rem', maxWidth: '800px' }}><i>"{user.vision}"</i></p>}
         </div>
 
         {/* Stats Grid */}
@@ -90,7 +90,7 @@ export function NgoDashboard({ user, onLogout, onOpenProfile, addToast, emergenc
                 <span style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: 700 }}>{s.change}</span>
               </div>
               <div style={{ fontSize: '1.8rem', fontWeight: 800 }}>{s.val}</div>
-              <div style={{ fontSize: '0.85rem', color: '#9ca3af', marginTop: '0.2rem' }}>{s.label}</div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>{s.label}</div>
             </div>
           ))}
         </div>

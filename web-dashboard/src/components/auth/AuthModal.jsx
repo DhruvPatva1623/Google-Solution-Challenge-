@@ -1,8 +1,16 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, Phone, Mail } from 'lucide-react';
+import { X, Phone, Mail, Loader2 } from 'lucide-react';
+import { auth, db, googleProvider } from '../../firebase';
+import { 
+  signInWithPopup, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail
+} from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
-export function AuthModal({ onClose, onLogin, addToast }) {
+export function AuthModal({ onClose, onLogin, addToast, theme }) {
   const [step, setStep] = useState('choose-role'); // choose-role | choose-method | email-login | ...
   const [role, setRole] = useState('volunteer'); // volunteer | ngo
   const [method, setMethod] = useState('');
@@ -52,28 +60,36 @@ export function AuthModal({ onClose, onLogin, addToast }) {
     }, 600);
   };
 
-  const handleGoogle = () => {
+  const handleGoogle = async () => {
     setLoading(true);
-    const user = {
-      name:'Dhruv Patva', email:'dhruv@gmail.com', phone:'', method:'google',
-      avatar:null,city:'Ahmedabad',state:'Gujarat',dob:'2004-01-01',gender:'Male',
-      skills:['Teaching','First Aid'],languages:['Hindi','English','Gujarati'],
-      availability:'Weekends',org:'BITS Pilani',bio:'Passionate about social impact.',
-      volunteerHours:120,points:1450,level:'Hero',joinDate:'2025-01-15',
-      verifiedId:true,aadhar:'xxxx-1234',address:'Near BITS Campus, Pilani',
-      emergencyContact:'Narendra Patva — +91 9876543210',
-      interests:['Education','Medical','Disaster Relief'],
-      notifications:{email:true,sms:true,push:true}
-    };
-    setTimeout(() => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      
+      // Check if user exists in Firestore
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        addToast('✅ Signed in with Google successfully!', 'success');
+        onLogin(userData);
+      } else {
+        // Redirect to profile setup
+        setForm(prev => ({ ...prev, name: user.displayName, email: user.email }));
+        setMethod('google');
+        setStep('profile');
+      }
+    } catch (error) {
+      console.error(error);
+      addToast(error.message, 'error');
+    } finally {
       setLoading(false);
-      addToast('✅ Signed in with Google successfully!','success');
-      onLogin(user);
-    }, 900);
+    }
   };
 
   const handleSendOtp = () => {
     if (!form.phone || form.phone.length < 10) { addToast('Please enter a valid 10-digit phone number','error'); return; }
+    addToast('📱 Phone auth requires Firebase recaptcha setup. Using demo mode for now.', 'info');
     setLoading(true);
     setTimeout(() => { setLoading(false); setOtpSent(true); addToast(`📱 OTP sent to +91 ${form.phone}`,'info'); }, 1200);
   };
@@ -84,6 +100,7 @@ export function AuthModal({ onClose, onLogin, addToast }) {
     setTimeout(() => {
       setLoading(false);
       const user = {
+        uid: 'phone-user-' + Date.now(),
         name:'Phone User', email:'', phone:form.phone, method:'phone',
         avatar:null, city:'', state:'', dob:'', gender:'',
         skills:[], languages:[], availability:'', org:'', bio:'',
@@ -98,50 +115,74 @@ export function AuthModal({ onClose, onLogin, addToast }) {
     }, 700);
   };
 
-  const handleEmailAuth = () => {
+  const handleEmailAuth = async () => {
     if (!form.email || !form.password) { addToast('Please fill all fields','error'); return; }
     if (!isLogin && form.password !== form.confirmPassword) { addToast('Passwords do not match','error'); return; }
+    
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
       if (isLogin) {
-        const demoAcc = DUMMY_ACCOUNTS.find(a => a.user.email === form.email);
-        if (demoAcc) {
-          if (demoAcc.user.role !== role) {
-            addToast(`Account mismatch: This email is for a ${demoAcc.user.role}.`, 'error');
-            return;
-          }
+        const result = await signInWithEmailAndPassword(auth, form.email, form.password);
+        const userDoc = await getDoc(doc(db, 'users', result.user.uid));
+        if (userDoc.exists()) {
           addToast('✅ Login successful! Welcome back 👋', 'success');
-          onLogin(demoAcc.user);
+          onLogin(userDoc.data());
         } else {
-          // New account simulation
-          const name = (form.email||'').split('@')[0].replace(/[^a-zA-Z ]/g,' ').trim() || (role === 'ngo' ? 'New NGO' : 'Volunteer');
-          onLogin({ name, email:form.email, role, points:0, level:'Newcomer', history:[] });
+          // This shouldn't happen if they signed up correctly, but handle it
+          addToast('Profile not found. Please complete setup.', 'warning');
+          setStep('profile');
         }
-      } else { setStep('profile'); }
-    }, 900);
+      } else {
+        // Sign Up - just move to profile step, will create user in handleProfileSubmit
+        setStep('profile');
+      }
+    } catch (error) {
+      console.error(error);
+      addToast(error.message, 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleProfileSubmit = () => {
+  const handleProfileSubmit = async () => {
     if (!form.name||!form.city||!form.dob) { addToast('Please fill Name, City, and Date of Birth','error'); return; }
+    
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      const user = {
-        name:form.name, email:form.email||'', phone:form.phone||'', method,
+    try {
+      let uid;
+      if (method === 'google') {
+        uid = auth.currentUser.uid;
+      } else {
+        const result = await createUserWithEmailAndPassword(auth, form.email, form.password);
+        uid = result.user.uid;
+      }
+
+      const userData = {
+        uid,
+        name:form.name, email:form.email||'', phone:form.phone||'', method: method || 'email',
         avatar:null, city:form.city, state:form.state||'', dob:form.dob, gender:form.gender||'',
-        skills:(form.skills||'').split(',').map(s=>s.trim()).filter(Boolean),
-        languages:(form.languages||'').split(',').map(s=>s.trim()).filter(Boolean),
+        skills:(form.skills||[]),
+        languages:(form.languages||[]),
         availability:form.availability||'', org:form.org||'', bio:form.bio||'',
         volunteerHours:0, points:0, level:'Newcomer',
         joinDate: new Date().toISOString().split('T')[0], verifiedId:false, aadhar:form.aadhar||'',
         address:form.address||'', emergencyContact:form.emergencyContact||'',
-        interests:(form.interests||'').split(',').map(s=>s.trim()).filter(Boolean),
-        notifications:{email:true,sms:true,push:true}
+        interests:(form.interests||[]),
+        notifications:{email:true,sms:true,push:true},
+        role
       };
-      addToast('🎉 Account created! Welcome to CommunityConnect','success'); onLogin(user);
-    }, 1500);
+
+      await setDoc(doc(db, 'users', uid), userData);
+      addToast('🎉 Account created! Welcome to CommunityConnect','success'); 
+      onLogin(userData);
+    } catch (error) {
+      console.error(error);
+      addToast(error.message, 'error');
+    } finally {
+      setLoading(false);
+    }
   };
+
 
   const inputStyle = {
     width:'100%', padding:'0.75rem 1rem', borderRadius:'10px',
@@ -155,7 +196,7 @@ export function AuthModal({ onClose, onLogin, addToast }) {
 
   return (
     <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={onClose}
-      style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.85)',backdropFilter:'none',zIndex:10000,display:'grid',placeItems:'center',padding:'1rem'}}>
+      style={{position:'fixed',inset:0,background:theme==='dark'?'rgba(0,0,0,0.8)':'rgba(255,255,255,0.6)',backdropFilter:'blur(8px)',zIndex:10000,display:'grid',placeItems:'center',padding:'1rem'}}>
       <motion.div initial={{scale:0.85,y:40}} animate={{scale:1,y:0}} exit={{scale:0.85,y:40}}
         onClick={e=>e.stopPropagation()} className="glass-panel"
         style={{padding:'2.5rem',borderRadius:'28px',maxWidth:'520px',width:'100%',maxHeight:'90vh',overflowY:'auto',position:'relative'}}>
@@ -165,7 +206,7 @@ export function AuthModal({ onClose, onLogin, addToast }) {
           <>
             <div style={{textAlign:'center',marginBottom:'2rem'}}>
               <div style={{fontSize:'3.5rem',marginBottom:'1rem'}}>🚀</div>
-              <h2 style={{fontSize:'2rem',fontWeight:800}}>How will you help?</h2>
+              <h2 style={{fontSize:'2rem',fontWeight:800,color:'var(--text-primary)'}}>How will you help?</h2>
               <p style={{color:'var(--text-secondary)',marginTop:'0.5rem'}}>Choose your path to start making an impact.</p>
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'1.5rem',marginBottom:'1rem'}}>
@@ -174,7 +215,7 @@ export function AuthModal({ onClose, onLogin, addToast }) {
                 onMouseEnter={e=>e.currentTarget.style.transform='translateY(-5px)'}
                 onMouseLeave={e=>e.currentTarget.style.transform='translateY(0)'}>
                 <div style={{fontSize:'3rem'}}>🤝</div>
-                <div style={{fontWeight:800,fontSize:'1.1rem'}}>Volunteer</div>
+                <div style={{fontWeight:800,fontSize:'1.1rem',color:'var(--text-primary)'}}>Volunteer</div>
                 <div style={{fontSize:'0.75rem',color:'var(--text-secondary)',textAlign:'center'}}>I want to join missions and earn rewards.</div>
               </button>
               <button onClick={()=>{setRole('ngo');setStep('choose')}} 
@@ -182,7 +223,7 @@ export function AuthModal({ onClose, onLogin, addToast }) {
                 onMouseEnter={e=>e.currentTarget.style.transform='translateY(-5px)'}
                 onMouseLeave={e=>e.currentTarget.style.transform='translateY(0)'}>
                 <div style={{fontSize:'3rem'}}>🏢</div>
-                <div style={{fontWeight:800,fontSize:'1.1rem'}}>Organization</div>
+                <div style={{fontWeight:800,fontSize:'1.1rem',color:'var(--text-primary)'}}>Organization</div>
                 <div style={{fontSize:'0.75rem',color:'var(--text-secondary)',textAlign:'center'}}>I want to create opportunities and monitor impact.</div>
               </button>
             </div>
@@ -372,16 +413,14 @@ export function AuthModal({ onClose, onLogin, addToast }) {
                 </>
               )}
 
-              <button className="btn-magic" style={{width:'100%',padding:'1rem',marginTop:'1rem'}} onClick={() => {
-                const user = {
-                  ...form, role,
-                  volunteerHours: 0, points: 0, level: 'Newcomer',
-                  history: [],
-                  name: form.name || form.org || 'Anonymous'
-                };
-                addToast('🚀 Account created! Welcome aboard.', 'success');
-                onLogin(user);
-              }}>Start My Journey</button>
+              <button 
+                className="btn-magic" 
+                style={{width:'100%',padding:'1rem',marginTop:'1rem', display:'flex', alignItems:'center', justifyContent:'center', gap:'0.5rem'}} 
+                onClick={handleProfileSubmit}
+                disabled={loading}
+              >
+                {loading ? <Loader2 className="animate-spin" size={20} /> : 'Start My Journey'}
+              </button>
             </div>
           </>
         )}

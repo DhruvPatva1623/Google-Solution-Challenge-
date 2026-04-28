@@ -18,13 +18,12 @@ export function Navbar({ theme, setTheme, handleSos, currentUser, setShowDashboa
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
           {isCheckingIn && (
-            <div style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', padding: '0.4rem 1rem', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '0.8rem', animation: 'pulse 2s infinite' }}>
-              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 10px #10b981' }} />
+            <div onClick={() => {}} style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', padding: '0.4rem 1rem', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer' }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 10px #10b981' }} className="animate-pulse" />
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#10b981', textTransform: 'uppercase' }}>Active Session</span>
                 <span style={{ fontSize: '1rem', fontWeight: 700, fontFamily: 'monospace' }}>{formatTime(activeSessionSecs)}</span>
               </div>
-              <button onClick={onCheckOut} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '0.2rem 0.5rem', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 800, cursor: 'pointer' }}>STOP</button>
             </div>
           )}
           <nav style={{ display: 'flex', gap: '2rem' }}>
