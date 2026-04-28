@@ -23,13 +23,68 @@ export function VolunteerDashboard({ user, addToast, onLogout, onOpenProfile, em
     { id:5, title: 'Clean Water Distribution', dist: '7.2 km', score: 80, type: 'URGENT', color: '#f97316', skills: ['Logistics'], deadline:'Tomorrow 12:00 PM', volunteers:6, needed:15 },
   ];
 
-  const myTaskHistory = useMemo(() => [
-    {title:'Blood Donation Camp',date:'2026-04-10',hrs:4,status:'Completed',pts:200},
-    {title:'Tree Plantation Drive',date:'2026-03-22',hrs:6,status:'Completed',pts:300},
-    {title:'Scholarship Form Fill-Up',date:'2026-03-05',hrs:3,status:'Completed',pts:150},
-    {title:'Winter Blanket Distribution',date:'2026-02-14',hrs:8,status:'Completed',pts:400},
-    {title:'Road Accident First Aid',date:'2026-01-30',hrs:2,status:'Completed',pts:100},
-  ], []);
+  const myTaskHistory = useMemo(() => {
+    const realHistory = (user.history || []).map(h => ({
+      title: h.title,
+      date: h.date,
+      hrs: h.hrs || 0,
+      status: 'Completed',
+      pts: (h.hrs || 0) * 50
+    }));
+
+    const dummyData = [
+      {title:'Tree Plantation Drive',date:'2026-03-22',hrs:6,status:'Completed',pts:300},
+      {title:'Scholarship Form Fill-Up',date:'2026-03-05',hrs:3,status:'Completed',pts:150},
+      {title:'Winter Blanket Distribution',date:'2026-02-14',hrs:8,status:'Completed',pts:400},
+    ];
+
+    return realHistory.length > 0 ? [...realHistory, ...dummyData] : [
+      {title:'Blood Donation Camp',date:'2026-04-10',hrs:4,status:'Completed',pts:200},
+      ...dummyData,
+      {title:'Road Accident First Aid',date:'2026-01-30',hrs:2,status:'Completed',pts:100},
+    ];
+  }, [user.history]);
+
+  const handleDownloadCertificate = (task) => {
+    addToast(`📜 Generating certificate for "${task.title}"...`, 'info');
+    setTimeout(() => {
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Certificate - ${task.title}</title>
+            <style>
+              body { font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f8fafc; }
+              .cert { width: 800px; padding: 50px; background: white; border: 20px solid #f97316; border-image: linear-gradient(135deg, #f97316, #ec4899) 1; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+              h1 { font-size: 3rem; margin-bottom: 10px; color: #1e293b; }
+              h2 { font-size: 1.5rem; color: #64748b; margin-bottom: 40px; }
+              .name { font-size: 2.5rem; font-weight: 800; color: #f97316; margin: 20px 0; }
+              .text { font-size: 1.2rem; line-height: 1.6; color: #475569; }
+              .footer { margin-top: 50px; display: flex; justify-content: space-between; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+              .sig { font-style: italic; color: #1e293b; }
+            </style>
+          </head>
+          <body>
+            <div class="cert">
+              <h2>CERTIFICATE OF IMPACT</h2>
+              <h1>CommunityConnect</h1>
+              <p class="text">This is to certify that</p>
+              <div class="name">${user.name}</div>
+              <p class="text">has successfully completed the mission</p>
+              <h3 style="font-size: 1.8rem; margin: 10px 0;">${task.title}</h3>
+              <p class="text">contributing <strong>${task.hrs} hours</strong> of dedicated service on <strong>${task.date}</strong>.</p>
+              <div class="footer">
+                <div>Date: ${new Date().toLocaleDateString()}</div>
+                <div class="sig">Authorized by CommunityConnect AI</div>
+              </div>
+            </div>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
+    }, 1500);
+  };
 
   const govtSchemes = useMemo(() => [
     { name: 'PM-KISAN', benefit: '₹6,000/year', eligible: true, desc: 'Direct income support for farming families' },
@@ -413,7 +468,7 @@ export function VolunteerDashboard({ user, addToast, onLogout, onOpenProfile, em
                   <div style={{display:'flex',alignItems:'center',gap:'1rem'}}>
                     <span style={{color:'#10b981',fontWeight:700,fontSize:'1.1rem'}}>+{t.pts} pts</span>
                     <span style={{background:'rgba(16,185,129,0.1)',color:'#10b981',padding:'0.3rem 0.8rem',borderRadius:'99px',fontSize:'0.8rem',fontWeight:700}}>{t.status}</span>
-                    <button onClick={()=>addToast('📜 Certificate download will be available in full release','info')} style={{padding:'0.4rem 0.9rem',borderRadius:'8px',border:'1px solid var(--border-light)',background:'transparent',color:'var(--text-primary)',cursor:'pointer',fontSize:'0.8rem',display:'flex',alignItems:'center',gap:'0.4rem',fontFamily:'var(--font-body)'}}>
+                    <button onClick={()=>handleDownloadCertificate(t)} style={{padding:'0.4rem 0.9rem',borderRadius:'8px',border:'1px solid var(--border-light)',background:'transparent',color:'var(--text-primary)',cursor:'pointer',fontSize:'0.8rem',display:'flex',alignItems:'center',gap:'0.4rem',fontFamily:'var(--font-body)'}}>
                       <Download size={14}/> Certificate
                     </button>
                   </div>
@@ -484,7 +539,7 @@ export function VolunteerDashboard({ user, addToast, onLogout, onOpenProfile, em
                   {name:'Priya Sharma',city:'Mumbai',pts:4820,badge:'🥇',hrs:340},
                   {name:'Rahul Verma',city:'Delhi',pts:3950,badge:'🥈',hrs:280},
                   {name:'Ananya Iyer',city:'Bangalore',pts:3100,badge:'🥉',hrs:220},
-                  {name: user.name||'Dhruv Patva',city: user.city||'Ahmedabad',pts:user.points||1450,badge:'4',hrs:user.volunteerHours||120, isMe:true},
+                  {name: user.name||'Dhruv Patva',city: user.city||'Ahmedabad',pts:user.points||0,badge:'4',hrs:user.volunteerHours||0, isMe:true},
                   {name:'Kamal Singh',city:'Jaipur',pts:1200,badge:'5',hrs:95},
                 ].map((v,i)=>(
                   <div key={i} style={{display:'flex',alignItems:'center',gap:'1rem',padding:'0.9rem',borderRadius:'12px',background:v.isMe?'rgba(249,115,22,0.08)':'transparent',border:v.isMe?'1px solid rgba(249,115,22,0.2)':'1px solid transparent',marginBottom:'0.5rem'}}>
@@ -501,8 +556,8 @@ export function VolunteerDashboard({ user, addToast, onLogout, onOpenProfile, em
                 <div style={{...cardS,textAlign:'center',background:'linear-gradient(135deg,rgba(139,92,246,0.1),rgba(236,72,153,0.1))'}}>
                   <div style={{fontSize:'2.5rem',marginBottom:'0.5rem'}}>🏅</div>
                   <h3 style={{fontSize:'1.1rem'}}>Your Rank</h3>
-                  <div style={{fontSize:'3rem',fontWeight:800,color:'var(--primary-500)'}}>#4</div>
-                  <div style={{color:'var(--text-secondary)',fontSize:'0.85rem'}}>in Ahmedabad</div>
+                  <div style={{fontSize:'3rem',fontWeight:800,color:'var(--primary-500)'}}>#{user.points > 3000 ? '3' : user.points > 0 ? '4' : '99+'}</div>
+                  <div style={{color:'var(--text-secondary)',fontSize:'0.85rem'}}>in {user.city || 'your city'}</div>
                 </div>
                 <div style={cardS}>
                   <h3 style={{fontSize:'1rem',marginBottom:'1rem'}}>📢 Recent Community Posts</h3>

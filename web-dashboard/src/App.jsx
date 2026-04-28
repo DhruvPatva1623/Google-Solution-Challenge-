@@ -397,9 +397,17 @@ function App() {
             setActiveTab={setActiveTab}
             onLogout={handleLogout}
             onNavigateBack={() => {
-              if (showProfile) setShowProfile(false);
-              else if (showDashboard) setShowDashboard(false);
-              else window.history.back();
+              if (showProfile) {
+                setShowProfile(false);
+              } else if (showDashboard) {
+                if (activeTab !== 'overview') {
+                  setActiveTab('overview');
+                } else {
+                  setShowDashboard(false);
+                }
+              } else {
+                window.history.back();
+              }
             }}
           />
         </div>
@@ -419,42 +427,6 @@ function App() {
         {showAuthModal && <AuthModal onClose={()=>setShowAuthModal(false)} onLogin={handleLogin} addToast={addToast} theme={theme}/>}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {showDashboard && currentUser && (
-          currentUser.role === 'ngo' ? (
-            <NgoDashboard
-              user={currentUser}
-              onLogout={handleLogout}
-              onOpenProfile={() => setShowProfile(true)}
-              addToast={addToast}
-              emergencyMissions={emergencyMissions}
-              onTriggerSos={() => setShowSosModal(true)}
-              theme={theme}
-              setTheme={setTheme}
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-            />
-          ) : (
-            <VolunteerDashboard
-              user={currentUser}
-              onLogout={handleLogout}
-              onOpenProfile={() => setShowProfile(true)}
-              addToast={addToast}
-              onCheckIn={handleCheckIn}
-              onCheckOut={handleCheckOut}
-              activeSessionSecs={activeSessionSecs}
-              isCheckingIn={!!checkInTime || accumulatedSecs > 0}
-              onMissionAccept={handleAcceptMission}
-              acceptedTasks={acceptedTasks}
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-              onViewHost={setShowHostProfile}
-              theme={theme}
-              setTheme={setTheme}
-            />
-          )
-        )}
-      </AnimatePresence>
 
       <AnimatePresence>
         {showSosModal && (
@@ -488,9 +460,15 @@ function App() {
         )}
       </AnimatePresence>
 
-      {!showDashboard && (
-        <>
-          <main style={{position:'relative',paddingTop:'160px',paddingBottom:'100px'}}>
+      <AnimatePresence mode="wait">
+        {!showDashboard ? (
+          <motion.main 
+            key="landing"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{ position: 'relative', paddingTop: '160px', paddingBottom: '100px', minHeight: '100vh' }}
+          >
             <Hero setShowAuthModal={setShowAuthModal} />
 
             {/* Live Emergency Feed - Visible to all */}
@@ -736,8 +714,50 @@ function App() {
                 </div>
               </div>
             </section>
-          </main>
+          </motion.main>
+        ) : (
+          <motion.div 
+            key="dashboard"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+          >
+            {currentUser?.role === 'ngo' ? (
+              <NgoDashboard
+                user={currentUser}
+                onLogout={handleLogout}
+                onOpenProfile={() => setShowProfile(true)}
+                addToast={addToast}
+                emergencyMissions={emergencyMissions}
+                onTriggerSos={() => setShowSosModal(true)}
+                theme={theme}
+                setTheme={setTheme}
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+              />
+            ) : (
+              <VolunteerDashboard
+                user={currentUser}
+                onLogout={handleLogout}
+                onOpenProfile={() => setShowProfile(true)}
+                addToast={addToast}
+                onCheckIn={handleCheckIn}
+                onCheckOut={handleCheckOut}
+                activeSessionSecs={activeSessionSecs}
+                isCheckingIn={!!checkInTime || accumulatedSecs > 0}
+                onMissionAccept={handleAcceptMission}
+                acceptedTasks={acceptedTasks}
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+              />
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
+      {/* Shared Landing Page Components (Footer & Mobile Nav) - Only show on landing */}
+      {!showDashboard && (
+        <>
           {/* Footer */}
           <footer style={{position:'relative',marginTop:'100px',borderTop:'1px solid var(--border-light)',padding:'4rem 2rem 2rem'}}>
             <div style={{maxWidth:'1200px',margin:'0 auto',display:'grid',gridTemplateColumns:'2fr 1fr 1fr 1fr',gap:'3rem'}}>
