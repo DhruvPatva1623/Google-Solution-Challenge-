@@ -1132,6 +1132,56 @@ function VolunteerDashboard({ user, addToast, onLogout, onOpenProfile }) {
 }
 
 /* ─────────────────────────────────────────
+   SPLASH SCREEN
+─────────────────────────────────────────*/
+function SplashScreen() {
+  return (
+    <motion.div
+      initial={{ opacity: 1 }}
+      exit={{ opacity: 0, scale: 1.1, filter: 'blur(10px)' }}
+      transition={{ duration: 0.8, ease: "easeInOut" }}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 999999, background: '#111827',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+      }}
+    >
+      <motion.div
+        initial={{ scale: 0.5, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        transition={{ duration: 1, type: "spring", bounce: 0.5 }}
+        style={{ display: 'flex', alignItems: 'center', gap: '1.2rem', marginBottom: '1rem' }}
+      >
+        <motion.span 
+          animate={{ rotate: 360 }} 
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          style={{ fontSize: '4rem', display: 'inline-block' }}
+        >
+          🌍
+        </motion.span>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: '3.5rem', margin: 0, background: 'linear-gradient(135deg, #f97316, #ec4899)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+          CommunityConnect
+        </h1>
+      </motion.div>
+      <motion.p
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1, delay: 0.8 }}
+        style={{ color: 'var(--text-secondary)', fontSize: '1.2rem', fontWeight: 500, letterSpacing: '2px' }}
+      >
+        WELCOME TO THE FUTURE OF IMPACT
+      </motion.p>
+      
+      <motion.div 
+        initial={{ width: 0 }}
+        animate={{ width: "300px" }}
+        transition={{ duration: 2.5, ease: "easeInOut" }}
+        style={{ height: "4px", background: "linear-gradient(90deg, #f97316, #ec4899)", marginTop: "2rem", borderRadius: "2px" }}
+      />
+    </motion.div>
+  );
+}
+
+/* ─────────────────────────────────────────
    MAIN APP
 ─────────────────────────────────────────*/
 function App() {
@@ -1145,22 +1195,15 @@ function App() {
   const [acceptedTasks, setAcceptedTasks] = useState({})
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showSchemeResult, setShowSchemeResult] = useState(false)
-  const [currentUser, setCurrentUser] = useState({
-      name:'Priya Sharma', email:'priya@demo.com', phone:'9876543210', method:'demo',
-      avatar:null, city:'Mumbai', state:'Maharashtra', dob:'1998-06-15', gender:'Female',
-      skills:['First Aid','Teaching','Social Media'],
-      languages:['Hindi','English','Marathi'],
-      availability:'Weekends only', org:'Tata Institute of Social Sciences',
-      bio:'Passionate social worker with 3 years of NGO experience. Love making communities stronger through education and healthcare.',
-      volunteerHours:340, points:4820, level:'Champion',
-      joinDate:'2024-03-10', verifiedId:true, aadhar:'xxxx-5678',
-      address:'Bandra West, Mumbai - 400050',
-      emergencyContact:'Rajesh Sharma — +91 9812345678',
-      interests:['Education','Healthcare','Women Empowerment'],
-      notifications:{email:true, sms:true, push:true}
-  })
-  const [showDashboard, setShowDashboard] = useState(true)
+  const [currentUser, setCurrentUser] = useState(null)
+  const [showDashboard, setShowDashboard] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
+  const [showSplash, setShowSplash] = useState(true)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowSplash(false), 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const [livesCount, livesRef] = useCounter(50389, 2500);
   const [volCount, volRef] = useCounter(10245, 2000);
@@ -1300,6 +1343,9 @@ function App() {
 
   return (
     <>
+      <AnimatePresence>
+        {showSplash && <SplashScreen />}
+      </AnimatePresence>
       <div className="cursor-trail" ref={cursorRef}/>
       <div className="cursor-blob" ref={blobRef}/>
       <div className="cosmic-layer"/>
