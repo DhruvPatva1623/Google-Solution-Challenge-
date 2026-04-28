@@ -48,22 +48,56 @@ export function VolunteerDashboard({ user, addToast, onLogout, onOpenProfile, em
   };
 
 
-  const impactBar = useMemo(() => ({
-    labels: ['Jan','Feb','Mar','Apr','May','Jun'],
-    datasets: [{
-      label: 'Hours',
-      data: [18, 26, 12, 32, 28, 40],
-      backgroundColor: 'rgba(249,115,22,0.55)',
-      borderColor: '#f97316',
-      borderWidth: 2,
-      borderRadius: 6,
-    }]
-  }), []);
+  const impactBar = useMemo(() => {
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const currentMonth = new Date().getMonth();
+    const displayMonths = [];
+    for(let i=5; i>=0; i--) {
+      let m = currentMonth - i;
+      if (m < 0) m += 12;
+      displayMonths.push(months[m]);
+    }
 
-  const donut = useMemo(() => ({
-    labels: ['Medical','Education','Disaster','Food','Environment'],
-    datasets: [{ data:[30,25,20,15,10], backgroundColor:['#ef4444','#3b82f6','#f97316','#10b981','#8b5cf6'], borderWidth:0 }]
-  }), []);
+    const data = displayMonths.map(mName => {
+      const mIdx = months.indexOf(mName);
+      return (user.history || []).reduce((acc, h) => {
+        const hDate = new Date(h.date);
+        return hDate.getMonth() === mIdx ? acc + (h.hrs || 0) : acc;
+      }, 0);
+    });
+
+    return {
+      labels: displayMonths,
+      datasets: [{
+        label: 'Hours',
+        data,
+        backgroundColor: 'rgba(249,115,22,0.55)',
+        borderColor: '#f97316',
+        borderWidth: 2,
+        borderRadius: 6,
+      }]
+    };
+  }, [user.history]);
+
+  const donut = useMemo(() => {
+    const history = user.history || [];
+    const categories = ['Medical','Education','Disaster','Food','Environment'];
+    const counts = categories.map(cat => 
+      history.filter(h => h.title.toLowerCase().includes(cat.toLowerCase())).length
+    );
+    
+    // If no history, show some placeholder distribution for visual appeal but with 0 values
+    const data = counts.every(c => c === 0) ? [0,0,0,0,0] : counts;
+
+    return {
+      labels: categories,
+      datasets: [{ 
+        data, 
+        backgroundColor:['#ef4444','#3b82f6','#f97316','#10b981','#8b5cf6'], 
+        borderWidth:0 
+      }]
+    };
+  }, [user.history]);
 
   const tabStyle = useCallback((t) => ({
     padding:'0.6rem 1.1rem', borderRadius:'10px', border:'none', cursor:'pointer', fontWeight:600, fontSize:'0.88rem',
@@ -85,58 +119,7 @@ export function VolunteerDashboard({ user, addToast, onLogout, onOpenProfile, em
     <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
       style={{position:'fixed',inset:0,background:'transparent',zIndex:9000,overflowY:'auto',paddingBottom:'2rem'}}>
 
-      {/* Dashboard Navbar */}
-      <div style={{position:'sticky',top:0,zIndex:100,background:'var(--glass-bg)',backdropFilter:'blur(20px)',borderBottom:'1px solid var(--border-light)',padding:'1rem 2rem',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-        <div style={{display:'flex',alignItems:'center',gap:'0.8rem'}}>
-          <img src="/CC_LOGO.png" alt="Logo" style={{ height: '32px', width: 'auto', objectFit: 'contain' }} />
-          <span style={{fontFamily:'var(--font-display)',fontWeight:800,fontSize:'1.2rem'}}>CommunityConnect</span>
-          <span style={{background:'rgba(16,185,129,0.15)',color:'#10b981',padding:'0.2rem 0.7rem',borderRadius:'99px',fontSize:'0.75rem',fontWeight:700}}>● LIVE</span>
-        </div>
-        <div style={{display:'flex',gap:'0.5rem',overflowX:'auto',padding:'0 0.5rem'}}>
-          {['overview','missions','history','schemes','community'].map(t=>(
-            <button key={t} onClick={()=>setActiveTab(t)} style={tabStyle(t)}>{t.charAt(0).toUpperCase()+t.slice(1)}</button>
-          ))}
-        </div>
-        <div style={{display:'flex',alignItems:'center',gap:'1rem',flexShrink:0}}>
-          <button onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)', padding: '0.4rem 0.8rem', borderRadius: '10px', fontSize: '1.2rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-primary)' }} aria-label="Toggle theme">
-            {theme === 'dark' ? '🌑' : '☀️'}
-          </button>
-          {/* Notifications Bell */}
-          <div style={{position:'relative'}}>
-            <button onClick={()=>setShowNotifs(v=>!v)} style={{background:'var(--bg-secondary)',border:'1px solid var(--border-light)',borderRadius:'50%',width:38,height:38,display:'grid',placeItems:'center',cursor:'pointer',color:'var(--text-primary)',position:'relative'}}>
-              <Bell size={18}/>
-              {unread>0 && <span style={{position:'absolute',top:-4,right:-4,background:'#ef4444',color:'white',width:18,height:18,borderRadius:'50%',fontSize:'0.65rem',display:'grid',placeItems:'center',fontWeight:700}}>{unread}</span>}
-            </button>
-            <AnimatePresence>
-              {showNotifs && (
-                <motion.div initial={{opacity:0,y:-10,scale:0.95}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:-10,scale:0.95}}
-                  style={{position:'absolute',right:0,top:'110%',width:320,background:'var(--bg-primary)',border:'1px solid var(--border-light)',borderRadius:'16px',boxShadow:'0 20px 40px rgba(0,0,0,0.15)',zIndex:200,overflow:'hidden'}}>
-                  <div style={{padding:'1rem',borderBottom:'1px solid var(--border-light)',fontWeight:700,fontSize:'0.9rem',display:'flex',justifyContent:'space-between'}}>
-                    Notifications <span style={{color:'var(--text-secondary)',fontWeight:400,fontSize:'0.8rem',cursor:'pointer'}} onClick={()=>setNotifications(p=>p.map(n=>({...n,read:true})))}>Mark all read</span>
-                  </div>
-                  {notifications.map(n=>(
-                    <div key={n.id} onClick={()=>markRead(n.id)} style={{padding:'0.9rem 1rem',borderBottom:'1px solid var(--border-light)',cursor:'pointer',background:n.read?'transparent':'rgba(249,115,22,0.05)',display:'flex',gap:'0.7rem',alignItems:'flex-start'}}>
-                      <div style={{width:8,height:8,borderRadius:'50%',background:n.read?'transparent':'var(--primary-500)',marginTop:4,flexShrink:0}}/>
-                      <div style={{flex:1}}>
-                        <div style={{fontSize:'0.85rem',fontWeight:n.read?400:600}}>{n.text}</div>
-                        <div style={{fontSize:'0.75rem',color:'var(--text-secondary)',marginTop:'0.2rem'}}>{n.time}</div>
-                      </div>
-                    </div>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-          {/* Profile avatar */}
-          <div onClick={onOpenProfile} style={{cursor:'pointer',display:'flex',alignItems:'center',gap:'0.7rem'}}>
-            <AvatarPlaceholder name={user.name} size={36}/>
-            <span style={{fontWeight:600,fontSize:'0.9rem'}}>{user.name.split(' ')[0]}</span>
-          </div>
-          <button onClick={onLogout} style={{background:'none',border:'1px solid var(--border-light)',borderRadius:'99px',padding:'0.4rem 0.9rem',cursor:'pointer',color:'var(--text-secondary)',fontSize:'0.85rem',fontWeight:600,display:'flex',alignItems:'center',gap:'0.4rem',fontFamily:'var(--font-body)'}}>
-            <LogOut size={14}/> Logout
-          </button>
-        </div>
-      </div>
+      <div style={{height:'80px'}} /> {/* Spacer for Global Navbar */}
 
       <div style={{maxWidth:1300,margin:'0 auto',padding:'2rem'}}>
         {/* ── OVERVIEW TAB ── */}
@@ -178,7 +161,7 @@ export function VolunteerDashboard({ user, addToast, onLogout, onOpenProfile, em
                 {icon:'⏱️',label:'Volunteer Hours',val:`${user.volunteerHours||0}h`,sub:'+0h this week',color:'#f97316'},
                 {icon:'⭐',label:'Impact Points',val:(user.points||0).toLocaleString(),sub:'Start your journey today',color:'#8b5cf6'},
                 {icon:'✅',label:'Tasks Done',val:user.history?.length || 0,sub:'0 this month',color:'#10b981'},
-                {icon:'❤️',label:'Lives Impacted',val:'0',sub:'+0 this week',color:'#ec4899'},
+                {icon:'❤️',label:'Lives Impacted',val: (user.history?.length || 0) * 5, sub:'+0 this week',color:'#ec4899'},
               ].map((s,i)=>(
                 <motion.div key={i} whileHover={{y:-4}} style={{...cardS,textAlign:'center',cursor:'default'}}>
                   <div style={{fontSize:'2rem',marginBottom:'0.5rem'}}>{s.icon}</div>

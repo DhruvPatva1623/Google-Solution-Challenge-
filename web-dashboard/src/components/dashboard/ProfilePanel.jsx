@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, Camera, Lock, ChevronRight, Edit3, Download } from 'lucide-react';
+import { X, Camera, Lock, ChevronRight, Edit3, Download, LogOut } from 'lucide-react';
 import { Bar } from 'react-chartjs-2';
 import { AvatarPlaceholder } from '../common/AvatarPlaceholder';
 
-export function ProfilePanel({ user, onClose, onUpdate, addToast }) {
+export function ProfilePanel({ user, onClose, onUpdate, addToast, onLogout }) {
   const [editing, setEditing] = useState(false);
   const [tab, setTab] = useState('personal');
   const [form, setForm] = useState({ ...user });
@@ -63,7 +63,7 @@ export function ProfilePanel({ user, onClose, onUpdate, addToast }) {
     <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={onClose}
       style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.85)',backdropFilter:'none',zIndex:10000,display:'flex',alignItems:'flex-start',justifyContent:'flex-end',padding:'80px 1rem 1rem'}}>
       <motion.div initial={{x:100,opacity:0}} animate={{x:0,opacity:1}} exit={{x:100,opacity:0}} onClick={e=>e.stopPropagation()}
-        className="glass-panel" style={{width:'min(560px,100%)',maxHeight:'calc(100vh - 100px)',borderRadius:'28px',overflow:'hidden',display:'flex',flexDirection:'column'}}>
+        className="glass-panel" style={{width:'min(560px,100%)',maxHeight:'calc(100vh - 80px)',borderRadius:'32px',overflow:'hidden',display:'flex',flexDirection:'column',boxShadow:'0 30px 60px rgba(0,0,0,0.3), 0 0 100px var(--primary-500)22',border:'1px solid rgba(255,255,255,0.1)'}}>
 
         {/* Header */}
         <div style={{padding:'2rem',background:'linear-gradient(135deg,var(--primary-500),var(--accent-pink))',position:'relative',flexShrink:0}}>
@@ -105,16 +105,16 @@ export function ProfilePanel({ user, onClose, onUpdate, addToast }) {
         </div>
 
         {/* Tabs */}
-        <div style={{display:'flex',borderBottom:'1px solid var(--border-light)',flexShrink:0,background:'var(--bg-secondary)'}}>
+        <div style={{display:'flex',borderBottom:'1px solid var(--border-light)',flexShrink:0,background:'rgba(255,255,255,0.02)',backdropFilter:'blur(5px)'}}>
           {tabs.map(t=>(
-            <button key={t.id} onClick={()=>setTab(t.id)} style={{flex:1,padding:'0.8rem 0.5rem',background:'none',border:'none',cursor:'pointer',color:tab===t.id?'var(--primary-500)':'var(--text-secondary)',fontWeight:tab===t.id?700:500,fontSize:'0.8rem',borderBottom:tab===t.id?'2px solid var(--primary-500)':'2px solid transparent',display:'flex',flexDirection:'column',alignItems:'center',gap:'0.2rem',fontFamily:'var(--font-body)',transition:'all 0.2s'}}>
-              <span>{t.icon}</span><span>{t.label}</span>
+            <button key={t.id} onClick={()=>setTab(t.id)} style={{flex:1,padding:'1rem 0.5rem',background:'none',border:'none',cursor:'pointer',color:tab===t.id?'var(--primary-500)':'var(--text-secondary)',fontWeight:tab===t.id?700:500,fontSize:'0.8rem',borderBottom:tab===t.id?'3px solid var(--primary-500)':'3px solid transparent',display:'flex',flexDirection:'column',alignItems:'center',gap:'0.3rem',fontFamily:'var(--font-body)',transition:'all 0.2s',opacity:tab===t.id?1:0.6}}>
+              <span style={{fontSize:'1.2rem'}}>{t.icon}</span><span style={{fontSize:'0.7rem',fontWeight:800,textTransform:'uppercase',letterSpacing:'0.5px'}}>{t.label}</span>
             </button>
           ))}
         </div>
 
         {/* Content */}
-        <div style={{flex:1,overflowY:'auto',padding:'1.5rem'}}>
+        <div style={{flex:1,overflowY:'auto',padding:'2rem',background:'rgba(0,0,0,0.1)'}}>
 
           {tab === 'personal' && (
             <div>
@@ -181,9 +181,34 @@ export function ProfilePanel({ user, onClose, onUpdate, addToast }) {
               </div>
               {fieldBlock('Availability','availability',false,'text',['Weekdays only','Weekends only','Weekdays & Weekends','Flexible / Any time'])}
               {/* Activity chart */}
-              <div style={{marginTop:'1rem',background:'var(--bg-secondary)',borderRadius:'16px',padding:'1.2rem',border:'1px solid var(--border-light)'}}>
-                <div style={{fontWeight:700,marginBottom:'0.8rem',fontSize:'0.9rem'}}>📈 Monthly Activity</div>
-                <Bar data={{labels:['Jan','Feb','Mar','Apr','May','Jun'],datasets:[{data:[12,18,8,24,16,20],backgroundColor:'rgba(249,115,22,0.4)',borderColor:'var(--primary-500)',borderWidth:2,borderRadius:6}]}} options={{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'var(--border-light)'}}}}} style={{height:120}}/>
+              <div style={{marginTop:'1.5rem',background:'rgba(255,255,255,0.03)',borderRadius:'24px',padding:'1.5rem',border:'1px solid var(--border-light)', boxShadow:'inset 0 0 20px rgba(0,0,0,0.2)'}}>
+                <div style={{fontWeight:800,marginBottom:'1rem',fontSize:'0.95rem',display:'flex',alignItems:'center',gap:'0.5rem'}}>
+                  <span>📈</span> Monthly Activity
+                </div>
+                <div style={{height:200, width:'100%', position:'relative'}}>
+                  <Bar 
+                    data={{
+                      labels:['Jan','Feb','Mar','Apr','May','Jun'],
+                      datasets:[{
+                        label: 'Hours',
+                        data: ['Jan','Feb','Mar','Apr','May','Jun'].map((m,i) => (user.history||[]).reduce((acc,h) => new Date(h.date).getMonth() === i ? acc + (h.hrs||0) : acc, 0)),
+                        backgroundColor:'rgba(249,115,22,0.6)',
+                        borderColor:'var(--primary-500)',
+                        borderWidth:2,
+                        borderRadius:8
+                      }]
+                    }} 
+                    options={{
+                      maintainAspectRatio:false,
+                      responsive:true,
+                      plugins:{legend:{display:false}},
+                      scales:{
+                        y:{beginAtZero:true, grid:{color:'rgba(255,255,255,0.05)'}, ticks:{color:'var(--text-secondary)', font:{size:10}}},
+                        x:{grid:{display:false}, ticks:{color:'var(--text-secondary)', font:{size:10}}}
+                      }
+                    }} 
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -273,6 +298,13 @@ export function ProfilePanel({ user, onClose, onUpdate, addToast }) {
                   </button>
                 ))}
               </div>
+              <div style={{marginTop:'2rem',fontWeight:700,marginBottom:'1rem'}}>Account Actions</div>
+              <button onClick={onLogout}
+                style={{width:'100%',padding:'1rem',borderRadius:'14px',background:'rgba(239,68,68,0.1)',color:'#ef4444',border:'1px solid rgba(239,68,68,0.3)',cursor:'pointer',fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',gap:'0.6rem',fontFamily:'var(--font-body)',transition:'all 0.2s'}}
+                onMouseEnter={e=>{e.currentTarget.style.background='#ef4444';e.currentTarget.style.color='white'}}
+                onMouseLeave={e=>{e.currentTarget.style.background='rgba(239,68,68,0.1)';e.currentTarget.style.color='#ef4444'}}>
+                <LogOut size={18}/> Sign Out from CommunityConnect
+              </button>
             </div>
           )}
         </div>

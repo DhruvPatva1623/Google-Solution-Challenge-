@@ -395,6 +395,7 @@ function App() {
             isCheckingIn={!!checkInTime || accumulatedSecs > 0}
             onCheckOut={handleCheckOut}
             setActiveTab={setActiveTab}
+            onLogout={handleLogout}
             onNavigateBack={() => {
               if (showProfile) setShowProfile(false);
               else if (showDashboard) setShowDashboard(false);
@@ -479,9 +480,10 @@ function App() {
         {showProfile && currentUser && (
           <ProfilePanel
             user={currentUser}
-            onClose={()=>{setShowProfile(false); if(currentUser) setShowDashboard(true)}}
+            onClose={() => setShowProfile(false)}
             onUpdate={handleProfileUpdate}
             addToast={addToast}
+            onLogout={handleLogout}
           />
         )}
       </AnimatePresence>

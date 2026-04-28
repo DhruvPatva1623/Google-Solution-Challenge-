@@ -47,24 +47,7 @@ export function NgoDashboard({ user, onLogout, onOpenProfile, addToast, emergenc
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       style={{ position: 'fixed', inset: 0, background: 'transparent', zIndex: 9000, overflowY: 'auto' }}>
       
-      {/* NGO Header */}
-      <div style={{ position: 'sticky', top: 0, zIndex: 100, background: 'var(--glass-bg)', backdropFilter: 'blur(20px)', borderBottom: '1px solid var(--border-light)', padding: '1rem 2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-          <img src="/CC_LOGO.png" alt="Logo" style={{ height: '30px', width: 'auto', objectFit: 'contain' }} />
-          <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.2rem' }}>{user.org}</span>
-          <span style={{ background: 'rgba(59, 130, 246, 0.15)', color: '#3b82f6', padding: '0.2rem 0.7rem', borderRadius: '99px', fontSize: '0.75rem', fontWeight: 700 }}>NGO PORTAL</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <button onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)', padding: '0.4rem 0.8rem', borderRadius: '10px', fontSize: '1.2rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-primary)' }} aria-label="Toggle theme">
-            {theme === 'dark' ? '🌑' : '☀️'}
-          </button>
-          <button onClick={onTriggerSos} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '0.6rem 1.2rem', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <AlertCircle size={18}/> NEW SOS
-          </button>
-          <div onClick={onOpenProfile} style={{ cursor: 'pointer' }}><AvatarPlaceholder name={user.name} size={40} /></div>
-          <button onClick={onLogout} style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer' }}><LogOut size={20}/></button>
-        </div>
-      </div>
+      <div style={{height:'80px'}} /> {/* Spacer for Global Navbar */}
 
       <div style={{ maxWidth: '1200px', margin: '2rem auto', padding: '0 2rem' }}>
         
