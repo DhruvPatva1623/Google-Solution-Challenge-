@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AvatarPlaceholder } from '../common/AvatarPlaceholder';
 
 export function Navbar({ 
-  theme, setTheme, handleSos, currentUser, setShowDashboard, setShowProfile, setShowAuthModal, 
+  theme, setTheme, handleSos, currentUser, showDashboard, setShowDashboard, setShowProfile, setShowAuthModal, 
   activeSessionSecs, isCheckingIn, onCheckOut, onNavigateBack, activeTab, setActiveTab, onLogout 
 }) {
   const [showNotifs, setShowNotifs] = useState(false);
@@ -22,7 +22,7 @@ export function Navbar({
   };
 
   const tabs = currentUser?.role === 'ngo' 
-    ? ['overview', 'missions', 'volunteers', 'emergency']
+    ? ['overview', 'missions', 'volunteers', 'analytics']
     : ['overview', 'missions', 'history', 'schemes', 'community'];
 
   return (
@@ -44,7 +44,7 @@ export function Navbar({
 
         {/* Middle: Dynamic Tabs or Landing Links */}
         <div style={{ flex: 1, display: 'flex', justifyContent: 'center', padding: '0 1rem', minWidth: 0 }}>
-          {currentUser && (activeTab || setShowDashboard) ? (
+          {currentUser && showDashboard ? (
             <div style={{ display: 'flex', gap: '0.4rem', background: 'var(--bg-secondary)', padding: '4px', borderRadius: '12px', border: '1px solid var(--border-light)', overflowX: 'auto', scrollbarWidth: 'none' }}>
               {tabs.map(t => (
                 <button key={t} onClick={() => { setActiveTab(t); setShowDashboard(true); }} 

@@ -45,44 +45,65 @@ export function VolunteerDashboard({ user, addToast, onLogout, onOpenProfile, em
     ];
   }, [user.history]);
 
-  const handleDownloadCertificate = (task) => {
-    addToast(`📜 Generating certificate for "${task.title}"...`, 'info');
+  const handleDownloadCertificate = (mission) => {
+    addToast('📜 Generating your official certificate...', 'info');
+    
     setTimeout(() => {
       const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        addToast('❌ Pop-up blocked! Please allow pop-ups to download.', 'error');
+        return;
+      }
+
       printWindow.document.write(`
         <html>
           <head>
-            <title>Certificate - ${task.title}</title>
+            <title>CommunityConnect Certificate - ${mission.title}</title>
+            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
             <style>
-              body { font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f8fafc; }
-              .cert { width: 800px; padding: 50px; background: white; border: 20px solid #f97316; border-image: linear-gradient(135deg, #f97316, #ec4899) 1; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
-              h1 { font-size: 3rem; margin-bottom: 10px; color: #1e293b; }
-              h2 { font-size: 1.5rem; color: #64748b; margin-bottom: 40px; }
-              .name { font-size: 2.5rem; font-weight: 800; color: #f97316; margin: 20px 0; }
-              .text { font-size: 1.2rem; line-height: 1.6; color: #475569; }
-              .footer { margin-top: 50px; display: flex; justify-content: space-between; border-top: 1px solid #e2e8f0; padding-top: 20px; }
-              .sig { font-style: italic; color: #1e293b; }
+              body { margin: 0; padding: 40px; font-family: 'Inter', sans-serif; background: #f8fafc; color: #1e293b; display: grid; place-items: center; min-height: 100vh; }
+              .cert { width: 800px; padding: 60px; border: 15px double #f97316; background: white; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.1); border-radius: 4px; box-sizing: border-box; }
+              .cert::before { content: ''; position: absolute; inset: 10px; border: 2px solid rgba(249,115,22,0.2); pointer-events: none; }
+              .logo { text-align: center; margin-bottom: 40px; font-weight: 800; font-size: 1.5rem; color: #f97316; letter-spacing: -1px; }
+              h1 { font-family: 'Playfair Display', serif; font-size: 3rem; text-align: center; margin: 20px 0; color: #0f172a; }
+              .subtitle { text-align: center; text-transform: uppercase; letter-spacing: 4px; font-weight: 700; color: #64748b; margin-bottom: 40px; font-size: 0.8rem; }
+              .content { text-align: center; line-height: 1.8; font-size: 1.1rem; color: #475569; }
+              .name { font-size: 2rem; font-weight: 800; text-decoration: underline; margin: 15px 0; color: #f97316; display: block; }
+              .footer { margin-top: 60px; display: flex; justify-content: space-between; border-top: 1px solid #e2e8f0; padding-top: 30px; font-size: 0.85rem; color: #64748b; }
+              .signature { border-top: 1px solid #334155; padding-top: 10px; font-weight: 700; color: #1e293b; }
+              @media print { body { background: white; padding: 0; } .cert { box-shadow: none; width: 100%; border-width: 10px; } }
             </style>
           </head>
           <body>
             <div class="cert">
-              <h2>CERTIFICATE OF IMPACT</h2>
-              <h1>CommunityConnect</h1>
-              <p class="text">This is to certify that</p>
-              <div class="name">${user.name}</div>
-              <p class="text">has successfully completed the mission</p>
-              <h3 style="font-size: 1.8rem; margin: 10px 0;">${task.title}</h3>
-              <p class="text">contributing <strong>${task.hrs} hours</strong> of dedicated service on <strong>${task.date}</strong>.</p>
+              <div class="logo">COMMUNITYCONNECT</div>
+              <div class="subtitle">Certificate of Impact</div>
+              <h1>Volunteer Recognition</h1>
+              <div class="content">
+                This is to certify that <span class="name">${user.name}</span>
+                has successfully completed the mission <strong>${mission.title}</strong>
+                on <strong>${mission.date}</strong>, contributing <strong>${mission.hrs} hours</strong> of dedicated community service.
+                <br><br>
+                Their commitment to social impact and volunteerism sets an inspiring example
+                for the global CommunityConnect network.
+              </div>
               <div class="footer">
-                <div>Date: ${new Date().toLocaleDateString()}</div>
-                <div class="sig">Authorized by CommunityConnect AI</div>
+                <div>
+                  <strong>Issue Date:</strong> ${new Date().toLocaleDateString()}<br>
+                  <strong>Certificate ID:</strong> CC-${Math.random().toString(36).substr(2, 9).toUpperCase()}
+                </div>
+                <div style="text-align: right;">
+                  <div class="signature">Executive Director</div>
+                  CommunityConnect AI Platform
+                </div>
               </div>
             </div>
+            <script>setTimeout(() => { window.print(); }, 500);</script>
           </body>
         </html>
       `);
       printWindow.document.close();
-      printWindow.print();
+      addToast('✅ Certificate generated! Opening print dialog...', 'success');
     }, 1500);
   };
 

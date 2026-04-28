@@ -388,12 +388,14 @@ function App() {
             setTheme={setTheme} 
             handleSos={handleSos} 
             currentUser={currentUser} 
+            showDashboard={showDashboard}
             setShowDashboard={setShowDashboard} 
             setShowProfile={setShowProfile} 
             setShowAuthModal={setShowAuthModal}
             activeSessionSecs={activeSessionSecs}
             isCheckingIn={!!checkInTime || accumulatedSecs > 0}
             onCheckOut={handleCheckOut}
+            activeTab={activeTab}
             setActiveTab={setActiveTab}
             onLogout={handleLogout}
             onNavigateBack={() => {
@@ -406,7 +408,10 @@ function App() {
                   setShowDashboard(false);
                 }
               } else {
-                window.history.back();
+                // If on landing page, ensure scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                // If we can't go back further, stay on home
+                if (window.history.length > 1) window.history.back();
               }
             }}
           />

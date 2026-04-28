@@ -78,19 +78,6 @@ export function NgoDashboard({ user, onLogout, onOpenProfile, addToast, emergenc
           ))}
         </div>
 
-        {/* Tabs */}
-        <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
-          {['overview', 'missions', 'volunteers', 'analytics'].map(t => (
-            <button key={t} onClick={() => setActiveTab(t)} style={{
-              padding: '0.7rem 1.5rem', borderRadius: '12px', border: 'none', cursor: 'pointer', fontWeight: 700,
-              background: activeTab === t ? '#3b82f6' : 'rgba(255,255,255,0.05)',
-              color: activeTab === t ? 'white' : '#9ca3af',
-              transition: 'all 0.2s', textTransform: 'capitalize'
-            }}>
-              {t}
-            </button>
-          ))}
-        </div>
 
         {/* Content Tabs */}
         <AnimatePresence mode="wait">
